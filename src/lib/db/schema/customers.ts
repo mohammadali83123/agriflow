@@ -6,6 +6,7 @@ import {
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
 import { organization } from "./auth";
 import { user } from "./auth";
 
@@ -29,7 +30,7 @@ export const customer = pgTable("customer", {
   address: text("address"),
   creditLimitMinor: bigint("credit_limit_minor", { mode: "bigint" })
     .notNull()
-    .default(0n),
+    .default(sql`0`),
   paymentTerms: text("payment_terms"),
   notes: text("notes"),
   status: customerStatusEnum("status").notNull().default("active"),
