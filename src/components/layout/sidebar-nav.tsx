@@ -2,8 +2,32 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  Tag,
+  Users,
+  Truck,
+  Banknote,
+  Factory,
+  Settings,
+  type LucideIcon,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { NavItem } from "./nav-config";
+
+const ICON_MAP: Record<string, LucideIcon> = {
+  LayoutDashboard,
+  Package,
+  ShoppingBag,
+  Tag,
+  Users,
+  Truck,
+  Banknote,
+  Factory,
+  Settings,
+};
 
 export function SidebarNav({ items }: { items: NavItem[] }) {
   const pathname = usePathname();
@@ -11,8 +35,9 @@ export function SidebarNav({ items }: { items: NavItem[] }) {
   return (
     <nav className="flex flex-col gap-0.5">
       {items.map((item) => {
-        const active = pathname === item.href || pathname.startsWith(item.href + "/");
-        const Icon = item.icon;
+        const active =
+          pathname === item.href || pathname.startsWith(item.href + "/");
+        const Icon = ICON_MAP[item.iconName] ?? Package;
         return (
           <Link
             key={item.href}

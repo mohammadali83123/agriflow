@@ -21,7 +21,7 @@ export async function AppShell({ children }: { children: ReactNode }) {
 
   return (
     <div className="flex h-screen overflow-hidden bg-background">
-      {/* Desktop sidebar */}
+      {/* Desktop sidebar — hidden on mobile */}
       <Sidebar
         navItems={navItems}
         settingsItem={SETTINGS_ITEM}
@@ -29,19 +29,22 @@ export async function AppShell({ children }: { children: ReactNode }) {
         userSection={userSection}
       />
 
-      {/* Mobile nav (top bar + drawer) */}
-      <MobileNav
-        navItems={navItems}
-        settingsItem={SETTINGS_ITEM}
-        activeOrgName={activeOrg?.name ?? "AgriFlow"}
-        orgSwitcher={orgSwitcher}
-        userSection={userSection}
-      />
+      {/* Column: mobile top-bar + scrollable content */}
+      <div className="flex flex-1 flex-col min-h-0 overflow-hidden">
+        {/* Mobile top bar (hamburger + org name) — hidden on desktop */}
+        <MobileNav
+          navItems={navItems}
+          settingsItem={SETTINGS_ITEM}
+          activeOrgName={activeOrg?.name ?? "AgriFlow"}
+          orgSwitcher={orgSwitcher}
+          userSection={userSection}
+        />
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        {children}
-      </main>
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

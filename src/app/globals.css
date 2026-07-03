@@ -4,6 +4,21 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* iOS safe-area utilities — pad content away from notch / home indicator */
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* Prevent tap highlight on interactive elements (mobile UX) */
+@layer base {
+  button, a {
+    -webkit-tap-highlight-color: transparent;
+  }
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);

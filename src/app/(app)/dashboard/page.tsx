@@ -17,7 +17,7 @@ export default async function DashboardPage() {
   const activeOrg = orgs.find((o) => o.id === orgId);
 
   return (
-    <div className="p-6 max-w-6xl mx-auto space-y-8">
+    <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8">
       {/* Greeting */}
       <div>
         <h1 className="text-2xl font-semibold tracking-tight">

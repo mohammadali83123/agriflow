@@ -25,8 +25,8 @@ export function MobileNav({
 
   return (
     <>
-      {/* Top bar — mobile only */}
-      <header className="md:hidden sticky top-0 z-40 flex items-center h-14 px-4 border-b bg-background gap-3">
+      {/* Top bar — mobile only. shrink-0 keeps it at fixed height; main scrolls below it */}
+      <header className="md:hidden shrink-0 z-40 flex items-center h-14 px-4 border-b bg-background gap-3">
         <button
           type="button"
           aria-label="Open menu"
@@ -88,7 +88,7 @@ export function MobileNav({
 
         <Separator />
 
-        <div className="px-3 py-3 shrink-0">{userSection}</div>
+        <div className="px-3 py-3 pb-safe shrink-0">{userSection}</div>
       </div>
     </>
   );
