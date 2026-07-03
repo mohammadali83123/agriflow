@@ -3,6 +3,9 @@
 This document explains the parts of AgriFlow that are easy to get subtly wrong. If code
 ever conflicts with this file, this file wins. Read alongside the GOLDEN RULES in CLAUDE.md.
 
+**Build status:** Sprints 0–2 complete. Auth, multi-tenancy scaffold, RBAC, and app shell
+are live. No business tables exist yet — they start in Sprint 3.
+
 ---
 
 ## 1. Multi-tenancy
@@ -183,6 +186,61 @@ with the entity's Zod schema → show a preview with per-row errors → commit v
 single DB transaction (org-scoped). Consumers: products, customers, suppliers, opening stock,
 opening balances. Imports that create stock or balances go through the inventory/ledger
 engines (never direct writes). Build it once in Sprint 3; reuse everywhere.
+
+---
+
+## 0. Auth & session architecture (implemented)
+
+### Two-layer auth gate
+
+```
+Browser request
+  └─▶ proxy.ts (edge, Turbopack)
+        └─ Fast cookie-presence check (better-auth.session_token)
+        └─ If absent → redirect /sign-in  (no DB call, edge-safe)
+        └─ If present → NextResponse.next()
+              └─▶ Server Component / Server Action
+                    └─ requireAuth() → auth.api.getSession()  ← authoritative DB check
+                    └─ requireOrg()  → resolves orgId + role from member table
+                    └─ Feature code runs with { session, orgId, role, db }
+```
+
+The proxy is **not** the security gate — it's just a UX redirect for cold browsers.
+`requireOrg()` in `src/lib/db/scoped.ts` is the gate. Every authenticated page/action
+calls it first.
+
+### Active-organization resolution
+
+On every sign-in, `databaseHooks.session.create.before` (in `lib/auth.ts`) runs:
+- 0 orgs → `activeOrganizationId = null` → sent to /onboarding
+- 1 org  → `activeOrganizationId = that org` → goes straight to /dashboard
+- 2+ orgs → `activeOrganizationId = null` → sent to /select-organization picker
+
+The picker calls `authClient.organization.setActive()` which updates the session row.
+
+### RSC → Client component boundary rule
+
+React Server Components cannot pass non-serializable values (functions, class instances)
+to Client Components. This affects anything holding a React component reference:
+
+```typescript
+// ✗ WRONG — LucideIcon is a React function, fails serialization
+interface NavItem { icon: LucideIcon }  // server passes this to a "use client" component
+
+// ✓ CORRECT — pass a string key, resolve the component on the client
+interface NavItem { iconName: string }  // safe across the boundary
+// Client component holds: const ICON_MAP: Record<string, LucideIcon> = { ... }
+```
+
+This pattern is already established in `nav-config.ts` + `sidebar-nav.tsx`.
+Any future config/nav/table columns that reference icons must follow the same pattern.
+
+### Roles
+
+Better Auth's `member.role` column holds the string. In code:
+- Type: `"owner" | "member"` (see `lib/rbac.ts`)
+- Displayed as: "Owner" / "Operator"
+- `can(role, permission)` must be checked server-side before every write
 
 ---
 
