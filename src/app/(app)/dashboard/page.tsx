@@ -1,45 +1,135 @@
-import { getUserOrganizations, requireOrg } from "@/lib/db/scoped";
-import { OrganizationSwitcher } from "@/components/auth/organization-switcher";
-import { SignOutButton } from "@/components/auth/sign-out-button";
+import {
+  ShoppingBag,
+  Package,
+  Banknote,
+  TrendingUp,
+  Package2,
+  ClipboardList,
+} from "lucide-react";
+import { requireOrg } from "@/lib/db/scoped";
+import { getUserOrganizations } from "@/lib/db/scoped";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
-  const { session, orgId } = await requireOrg();
+  const { session, orgId, role } = await requireOrg();
   const orgs = await getUserOrganizations(session.user.id);
   const activeOrg = orgs.find((o) => o.id === orgId);
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <span className="font-semibold text-sm shrink-0">AgriFlow</span>
-            <span className="text-border shrink-0">/</span>
-            <OrganizationSwitcher organizations={orgs} activeOrgId={orgId} />
-          </div>
-          <SignOutButton name={session.user.name} />
-        </div>
-      </header>
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
-        <p className="text-muted-foreground mt-1">
-          {activeOrg?.name ?? "Your business"} · Welcome back, {session.user.name}
+    <div className="p-6 max-w-6xl mx-auto space-y-8">
+      {/* Greeting */}
+      <div>
+        <h1 className="text-2xl font-semibold tracking-tight">
+          {activeOrg?.name ?? "Dashboard"}
+        </h1>
+        <p className="text-muted-foreground mt-0.5">
+          Welcome back, {session.user.name}
         </p>
-        <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
-          {["Sales today", "Outstanding", "Inventory", "Pending dispatch"].map(
-            (label) => (
-              <div
-                key={label}
-                className="rounded-xl border bg-card p-5 space-y-1"
-              >
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="text-2xl font-semibold">—</p>
+      </div>
+
+      {role === "owner" ? (
+        <OwnerDashboard />
+      ) : (
+        <OperatorDashboard />
+      )}
+    </div>
+  );
+}
+
+function OwnerDashboard() {
+  const kpis = [
+    { label: "Sales today", value: "—", sub: "Rs 0", icon: TrendingUp },
+    { label: "Outstanding", value: "—", sub: "0 customers", icon: Banknote },
+    { label: "Inventory value", value: "—", sub: "0 products", icon: Package },
+    {
+      label: "Pending dispatch",
+      value: "—",
+      sub: "0 orders",
+      icon: ShoppingBag,
+    },
+  ];
+
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        {kpis.map((kpi) => {
+          const Icon = kpi.icon;
+          return (
+            <div key={kpi.label} className="rounded-xl border bg-card p-5">
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-medium text-muted-foreground">
+                  {kpi.label}
+                </p>
+                <Icon className="size-4 text-muted-foreground" />
               </div>
-            )
-          )}
-        </div>
-      </main>
+              <p className="text-2xl font-semibold">{kpi.value}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">{kpi.sub}</p>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="rounded-xl border bg-card p-6">
+        <p className="text-sm font-medium mb-1">Recent activity</p>
+        <p className="text-sm text-muted-foreground">
+          Orders, payments, and dispatches will appear here.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function OperatorDashboard() {
+  const actions = [
+    {
+      label: "Receive Stock",
+      desc: "Record a new purchase or stock arrival",
+      icon: Package2,
+      href: "/inventory/receive",
+    },
+    {
+      label: "Process Order",
+      desc: "Confirm or dispatch a pending order",
+      icon: ClipboardList,
+      href: "/orders",
+    },
+    {
+      label: "Record Payment",
+      desc: "Log a customer payment",
+      icon: Banknote,
+      href: "/payments/new",
+    },
+    {
+      label: "Dispatch Order",
+      desc: "Mark goods as loaded and sent",
+      icon: ShoppingBag,
+      href: "/orders?status=ready",
+    },
+  ];
+
+  return (
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      {actions.map((action) => {
+        const Icon = action.icon;
+        return (
+          <a
+            key={action.label}
+            href={action.href}
+            className="flex items-start gap-4 rounded-xl border bg-card p-5 transition-colors hover:bg-muted"
+          >
+            <span className="flex size-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+              <Icon className="size-5" />
+            </span>
+            <div>
+              <p className="font-medium text-sm">{action.label}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {action.desc}
+              </p>
+            </div>
+          </a>
+        );
+      })}
     </div>
   );
 }

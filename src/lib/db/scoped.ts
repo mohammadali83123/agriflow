@@ -1,7 +1,8 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { type Role } from "@/lib/rbac";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
 
@@ -42,13 +43,28 @@ export async function requireAuth() {
   return session;
 }
 
-/** Throws (redirects) if there is no session OR no active organization.
- *  Returns { session, orgId, db } — the triple every feature Server Action needs.
- *  orgId is injected into every query: `.where(eq(table.orgId, orgId))`.
+/**
+ * Throws (redirects) if there is no session OR no active organization.
+ * Returns { session, orgId, role, db } — everything feature Server Actions need.
+ * Every query must filter by orgId: `.where(eq(table.orgId, orgId))`.
  */
 export async function requireOrg() {
   const session = await requireAuth();
   const orgId = session.session.activeOrganizationId;
   if (!orgId) redirect("/select-organization");
-  return { session, orgId, db } as const;
+
+  const [membership] = await db
+    .select({ role: schema.member.role })
+    .from(schema.member)
+    .where(
+      and(
+        eq(schema.member.userId, session.user.id),
+        eq(schema.member.organizationId, orgId)
+      )
+    )
+    .limit(1);
+
+  const role = (membership?.role ?? "member") as Role;
+
+  return { session, orgId, role, db } as const;
 }
