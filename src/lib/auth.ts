@@ -22,15 +22,19 @@ export const auth = betterAuth({
         // On every new session (i.e. sign-in), resolve the user's active org
         // so it persists across logins — not just right after onboarding.
         before: async (session) => {
-          const [membership] = await db
+          const memberships = await db
             .select({ organizationId: schema.member.organizationId })
             .from(schema.member)
             .where(eq(schema.member.userId, session.userId))
-            .limit(1);
+            .limit(2);
+          // Auto-select only when there is exactly one org (frictionless).
+          // 0 orgs → onboarding; 2+ → the user picks on /select-organization.
+          const activeOrganizationId =
+            memberships.length === 1 ? memberships[0].organizationId : null;
           return {
             data: {
               ...session,
-              activeOrganizationId: membership?.organizationId ?? null,
+              activeOrganizationId,
             },
           };
         },

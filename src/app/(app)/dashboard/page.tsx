@@ -1,23 +1,30 @@
-import { requireOrg } from "@/lib/db/scoped";
+import { getUserOrganizations, requireOrg } from "@/lib/db/scoped";
+import { OrganizationSwitcher } from "@/components/auth/organization-switcher";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
-  const { session } = await requireOrg();
+  const { session, orgId } = await requireOrg();
+  const orgs = await getUserOrganizations(session.user.id);
+  const activeOrg = orgs.find((o) => o.id === orgId);
 
   return (
     <div className="min-h-screen bg-background">
       <header className="border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between">
-          <span className="font-semibold text-sm">AgriFlow</span>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-14 flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            <span className="font-semibold text-sm shrink-0">AgriFlow</span>
+            <span className="text-border shrink-0">/</span>
+            <OrganizationSwitcher organizations={orgs} activeOrgId={orgId} />
+          </div>
           <SignOutButton name={session.user.name} />
         </div>
       </header>
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
         <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          Welcome back, {session.user.name}
+          {activeOrg?.name ?? "Your business"} · Welcome back, {session.user.name}
         </p>
         <div className="mt-8 grid grid-cols-2 gap-4 sm:grid-cols-4">
           {["Sales today", "Outstanding", "Inventory", "Pending dispatch"].map(

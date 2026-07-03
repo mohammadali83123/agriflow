@@ -1,7 +1,33 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db";
+import * as schema from "@/lib/db/schema";
+
+export interface UserOrganization {
+  id: string;
+  name: string;
+  slug: string | null;
+}
+
+/** All organizations the given user is a member of. */
+export async function getUserOrganizations(
+  userId: string
+): Promise<UserOrganization[]> {
+  return db
+    .select({
+      id: schema.organization.id,
+      name: schema.organization.name,
+      slug: schema.organization.slug,
+    })
+    .from(schema.member)
+    .innerJoin(
+      schema.organization,
+      eq(schema.member.organizationId, schema.organization.id)
+    )
+    .where(eq(schema.member.userId, userId));
+}
 
 // ─── Session helpers ──────────────────────────────────────────────────────────
 
@@ -23,6 +49,6 @@ export async function requireAuth() {
 export async function requireOrg() {
   const session = await requireAuth();
   const orgId = session.session.activeOrganizationId;
-  if (!orgId) redirect("/onboarding");
+  if (!orgId) redirect("/select-organization");
   return { session, orgId, db } as const;
 }

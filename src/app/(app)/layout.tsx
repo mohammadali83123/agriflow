@@ -8,9 +8,10 @@ export default async function AppLayout({
 }) {
   const session = await requireAuth();
 
-  // If no active org, send them to onboarding to create one
+  // If no active org, send them to the selector (which routes to onboarding
+  // when they have none, or shows a picker when they have several).
   if (!session.session.activeOrganizationId) {
-    redirect("/onboarding");
+    redirect("/select-organization");
   }
 
   return <>{children}</>;

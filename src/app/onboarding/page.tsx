@@ -27,10 +27,14 @@ export default function OnboardingPage() {
     setError("");
     setPending(true);
 
-    const slug = name
+    // Slugs are globally unique across tenants, so append a short random
+    // suffix to avoid collisions between businesses with similar names.
+    const base = name
       .toLowerCase()
       .replace(/\s+/g, "-")
       .replace(/[^a-z0-9-]/g, "");
+    const suffix = Math.random().toString(36).slice(2, 6);
+    const slug = `${base || "business"}-${suffix}`;
 
     const { data, error: err } = await authClient.organization.create({
       name: name.trim(),
