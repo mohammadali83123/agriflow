@@ -44,6 +44,21 @@ export async function requireAuth() {
 }
 
 /**
+ * Throws (redirects to /dashboard) if the current user is not a platform admin.
+ * Platform admins are listed in PLATFORM_ADMIN_EMAILS (comma-separated env var).
+ * This is the gate for the /admin area — called at the top of every admin Server Action and page.
+ */
+export async function requirePlatformAdmin() {
+  const session = await requireAuth();
+  const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  if (!adminEmails.includes(session.user.email)) redirect("/dashboard");
+  return session;
+}
+
+/**
  * Throws (redirects) if there is no session OR no active organization.
  * Returns { session, orgId, role, db } — everything feature Server Actions need.
  * Every query must filter by orgId: `.where(eq(table.orgId, orgId))`.

@@ -38,9 +38,14 @@ export default function AuthLayout({
           </ul>
         </div>
 
-        <p className="text-primary-foreground/50 text-xs">
-          © {new Date().getFullYear()} AgriFlow
-        </p>
+        <div className="space-y-1">
+          <p className="text-primary-foreground/60 text-xs font-medium">
+            Questions? Get in touch.
+          </p>
+          <p className="text-primary-foreground/40 text-xs">
+            agriflow.app · Powered by AgriFlow
+          </p>
+        </div>
       </div>
 
       {/* Form panel */}

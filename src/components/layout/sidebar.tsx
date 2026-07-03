@@ -50,6 +50,13 @@ export function Sidebar({
 
       {/* User + sign out */}
       <div className="px-3 py-3 shrink-0">{userSection}</div>
+
+      {/* Powered by */}
+      <div className="px-3 pb-3 shrink-0">
+        <p className="text-[10px] text-sidebar-foreground/30 text-center tracking-wide">
+          Powered by AgriFlow
+        </p>
+      </div>
     </aside>
   );
 }
