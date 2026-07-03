@@ -1,4 +1,8 @@
+import { config } from "dotenv";
 import { defineConfig } from "drizzle-kit";
+
+// drizzle-kit runs outside Next.js and doesn't auto-load .env.local
+config({ path: ".env.local" });
 
 export default defineConfig({
   schema: "./src/lib/db/schema/index.ts",
