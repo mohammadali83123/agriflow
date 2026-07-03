@@ -15,6 +15,13 @@
       "when": 1783121100596,
       "tag": "0001_strange_young_avengers",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783121298327,
+      "tag": "0002_gigantic_lorna_dane",
+      "breakpoints": true
     }
   ]
 }
