@@ -8,6 +8,13 @@
       "when": 1783117530699,
       "tag": "0000_glamorous_vermin",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783121100596,
+      "tag": "0001_strange_young_avengers",
+      "breakpoints": true
     }
   ]
 }

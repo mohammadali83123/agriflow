@@ -1,3 +1,5 @@
+export const dynamic = "force-dynamic";
+
 import { redirect } from "next/navigation";
 import { getUserOrganizations, requireAuth } from "@/lib/db/scoped";
 import { OrganizationPicker } from "@/components/auth/organization-picker";
