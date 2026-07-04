@@ -24,8 +24,8 @@ export function DeleteSupplierButton({ id }: { id: string }) {
     setLoading(true);
     try {
       await deleteSupplier(id);
+      setOpen(false);
       router.push("/suppliers");
-      router.refresh();
     } catch {
       setLoading(false);
     }

@@ -24,8 +24,8 @@ export function DeleteCustomerButton({ id }: { id: string }) {
     setLoading(true);
     try {
       await deleteCustomer(id);
+      setOpen(false);
       router.push("/customers");
-      router.refresh();
     } catch {
       setLoading(false);
     }

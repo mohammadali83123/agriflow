@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, ilike, isNull, or } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { requireOrg } from "@/lib/db/scoped";
 import { can } from "@/lib/rbac";
 import * as schema from "@/lib/db/schema";
@@ -83,6 +84,7 @@ export async function createSupplier(input: unknown) {
     })
     .returning();
 
+  revalidatePath("/suppliers");
   return created;
 }
 
@@ -150,4 +152,6 @@ export async function deleteSupplier(id: string) {
     .update(schema.supplier)
     .set({ deletedAt: new Date() })
     .where(eq(schema.supplier.id, id));
+
+  revalidatePath("/suppliers");
 }

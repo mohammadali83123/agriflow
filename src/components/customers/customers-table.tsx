@@ -3,33 +3,32 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Search, Package, ChevronRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Search, Users, ChevronRight } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { formatRupees } from "@/lib/money";
 
-type Product = {
+type Customer = {
   id: string;
   name: string;
-  sku: string | null;
-  baseUnit: string;
-  basePriceMinor: number | null;
+  businessName: string | null;
+  phone: string;
+  city: string | null;
+  creditLimitMinor: bigint | number;
   status: "active" | "inactive";
 };
 
-interface ProductsClientProps {
-  products: Product[];
-}
-
-export function ProductsClient({ products }: ProductsClientProps) {
+export function CustomersTable({ customers }: { customers: Customer[] }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
 
-  const filtered = products.filter((p) => {
+  const filtered = customers.filter((c) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      p.name.toLowerCase().includes(q) ||
-      (p.sku?.toLowerCase().includes(q) ?? false)
+      c.name.toLowerCase().includes(q) ||
+      c.phone.includes(q) ||
+      (c.city?.toLowerCase().includes(q) ?? false) ||
+      (c.businessName?.toLowerCase().includes(q) ?? false)
     );
   });
 
@@ -40,7 +39,7 @@ export function ProductsClient({ products }: ProductsClientProps) {
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search by name or SKU..."
+          placeholder="Search by name, phone, city..."
           className="h-10 w-full rounded-xl border border-input bg-transparent pl-9 pr-3 text-sm outline-none placeholder:text-muted-foreground focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
         />
       </div>
@@ -48,22 +47,22 @@ export function ProductsClient({ products }: ProductsClientProps) {
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-2xl border bg-card py-20 text-center shadow-sm">
           <div className="flex size-12 items-center justify-center rounded-full bg-muted mb-4">
-            <Package className="size-5 text-muted-foreground" />
+            <Users className="size-5 text-muted-foreground" />
           </div>
           <p className="text-sm font-semibold text-foreground">
-            {search ? "No products found" : "No products yet"}
+            {search ? "No customers found" : "No customers yet"}
           </p>
           <p className="text-sm text-muted-foreground mt-1 max-w-xs">
             {search
-              ? "Try a different name or SKU."
-              : "Add the grains and products you sell."}
+              ? "Try a different name, phone, or city."
+              : "Add your first customer to start tracking orders and payments."}
           </p>
           {!search && (
             <Link
-              href="/products/new"
+              href="/customers/new"
               className="mt-4 text-sm font-medium text-primary underline-offset-4 hover:underline"
             >
-              Add first product
+              Add first customer
             </Link>
           )}
         </div>
@@ -73,16 +72,16 @@ export function ProductsClient({ products }: ProductsClientProps) {
             <thead>
               <tr className="border-b bg-muted/40">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Product
+                  Customer
+                </th>
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  Phone
                 </th>
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
-                  SKU
+                  City
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Base unit
-                </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Base price
+                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">
+                  Credit limit
                 </th>
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
                   Status
@@ -91,34 +90,40 @@ export function ProductsClient({ products }: ProductsClientProps) {
               </tr>
             </thead>
             <tbody className="divide-y">
-              {filtered.map((p) => (
+              {filtered.map((c) => (
                 <tr
-                  key={p.id}
-                  onClick={() => router.push(`/products/${p.id}`)}
+                  key={c.id}
+                  onClick={() => router.push(`/customers/${c.id}`)}
                   className="hover:bg-muted/40 transition-colors cursor-pointer group"
                 >
                   <td className="px-5 py-4">
-                    <p className="font-semibold text-sm text-foreground">{p.name}</p>
-                  </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground hidden sm:table-cell">
-                    {p.sku ?? "—"}
+                    <p className="font-semibold text-sm text-foreground">{c.name}</p>
+                    {c.businessName && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        {c.businessName}
+                      </p>
+                    )}
                   </td>
                   <td className="px-5 py-4 text-sm text-muted-foreground">
-                    {p.baseUnit}
+                    {c.phone}
                   </td>
-                  <td className="px-5 py-4 text-sm font-medium">
-                    {p.basePriceMinor !== null ? formatRupees(p.basePriceMinor) : "—"}
+                  <td className="px-5 py-4 text-sm text-muted-foreground hidden sm:table-cell">
+                    {c.city ?? "—"}
+                  </td>
+                  <td className="px-5 py-4 text-sm text-muted-foreground hidden md:table-cell">
+                    {formatRupees(c.creditLimitMinor)}
                   </td>
                   <td className="px-5 py-4">
-                    {p.status === "active" ? (
-                      <Badge className="bg-emerald-100 text-emerald-800 border-transparent hover:bg-emerald-100 font-semibold">
-                        Active
-                      </Badge>
-                    ) : (
-                      <Badge variant="secondary" className="font-semibold">
-                        Inactive
-                      </Badge>
-                    )}
+                    <span
+                      className={cn(
+                        "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+                        c.status === "active"
+                          ? "bg-emerald-100 text-emerald-800"
+                          : "bg-gray-100 text-gray-600"
+                      )}
+                    >
+                      {c.status === "active" ? "Active" : "Inactive"}
+                    </span>
                   </td>
                   <td className="px-3 py-4">
                     <ChevronRight className="size-4 text-muted-foreground group-hover:text-foreground transition-colors" />

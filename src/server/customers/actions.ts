@@ -1,6 +1,7 @@
 "use server";
 
 import { and, eq, ilike, isNull, or } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { requireOrg } from "@/lib/db/scoped";
 import { can } from "@/lib/rbac";
 import { toMinor } from "@/lib/money";
@@ -112,6 +113,7 @@ export async function createCustomer(input: unknown) {
     })
     .returning();
 
+  revalidatePath("/customers");
   return created;
 }
 
@@ -187,6 +189,8 @@ export async function deleteCustomer(id: string) {
     .update(schema.customer)
     .set({ deletedAt: new Date() })
     .where(eq(schema.customer.id, id));
+
+  revalidatePath("/customers");
 }
 
 export async function addContact(input: unknown) {

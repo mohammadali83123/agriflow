@@ -19,7 +19,6 @@ import {
 import { supplier } from "@/lib/db/schema";
 import { useState } from "react";
 
-// Local form schema — no .default() to avoid input/output type mismatch with RHF
 const formSchema = z.object({
   type: z.enum(["farmer", "supplier", "trader"]),
   name: z.string().min(1, "Name is required"),
@@ -75,165 +74,184 @@ export function SupplierForm({ supplier: existing }: SupplierFormProps) {
         await updateSupplier(existing.id, data);
         router.push(`/suppliers/${existing.id}`);
       } else {
-        const created = await createSupplier(data);
-        if (created) {
-          router.push(`/suppliers/${created.id}`);
-        } else {
-          router.push("/suppliers");
-        }
+        await createSupplier(data);
+        router.push("/suppliers");
       }
-      router.refresh();
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit(onSubmit)}>
       {serverError && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {serverError}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* Type */}
-        <div className="space-y-1.5">
-          <Label htmlFor="type">
-            Type <span className="text-destructive">*</span>
-          </Label>
-          <Select
-            value={typeValue}
-            onValueChange={(val) =>
-              setValue("type", val as "farmer" | "supplier" | "trader")
-            }
+      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+        {/* Basic information */}
+        <div className="px-6 py-6 border-b">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+            Basic information
+          </p>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="type" className="text-sm font-medium">
+                Type <span className="text-destructive">*</span>
+              </Label>
+              <Select
+                value={typeValue}
+                onValueChange={(val) =>
+                  setValue("type", val as "farmer" | "supplier" | "trader")
+                }
+              >
+                <SelectTrigger className="w-full" aria-invalid={!!errors.type}>
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="farmer">Farmer</SelectItem>
+                  <SelectItem value="supplier">Supplier</SelectItem>
+                  <SelectItem value="trader">Trader</SelectItem>
+                </SelectContent>
+              </Select>
+              {errors.type && (
+                <p className="text-xs text-destructive">{errors.type.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="name"
+                placeholder="Supplier name"
+                aria-invalid={!!errors.name}
+                {...register("name")}
+              />
+              {errors.name && (
+                <p className="text-xs text-destructive">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="businessName" className="text-sm font-medium">
+                Business name
+              </Label>
+              <Input
+                id="businessName"
+                placeholder="Trading name (optional)"
+                {...register("businessName")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+              <Select
+                value={statusValue ?? "active"}
+                onValueChange={(val) =>
+                  setValue("status", val as "active" | "inactive")
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </div>
+
+        {/* Contact */}
+        <div className="px-6 py-6 border-b">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+            Contact
+          </p>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium">Phone</Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+92 300 0000000"
+                {...register("phone")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp" className="text-sm font-medium">WhatsApp</Label>
+              <Input
+                id="whatsapp"
+                type="tel"
+                placeholder="If different from phone"
+                {...register("whatsapp")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="paymentTerms" className="text-sm font-medium">
+                Payment terms
+              </Label>
+              <Input
+                id="paymentTerms"
+                placeholder="e.g. 30 days, advance"
+                {...register("paymentTerms")}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Additional details */}
+        <div className="px-6 py-6 border-b">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+            Additional details
+          </p>
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-sm font-medium">Address</Label>
+              <Textarea
+                id="address"
+                placeholder="Street address, village, area..."
+                rows={2}
+                {...register("address")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Any additional notes..."
+                rows={2}
+                {...register("notes")}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Action row */}
+        <div className="px-6 py-4 bg-muted/20 flex items-center gap-3">
+          <Button type="submit" size="lg" disabled={isSubmitting}>
+            {isSubmitting
+              ? "Saving..."
+              : isEdit
+              ? "Update supplier"
+              : "Create supplier"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={() => router.back()}
+            disabled={isSubmitting}
           >
-            <SelectTrigger className="w-full" aria-invalid={!!errors.type}>
-              <SelectValue placeholder="Select type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="farmer">Farmer</SelectItem>
-              <SelectItem value="supplier">Supplier</SelectItem>
-              <SelectItem value="trader">Trader</SelectItem>
-            </SelectContent>
-          </Select>
-          {errors.type && (
-            <p className="text-xs text-destructive">{errors.type.message}</p>
-          )}
+            Cancel
+          </Button>
         </div>
-
-        {/* Name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="name">
-            Name <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="name"
-            placeholder="Supplier name"
-            aria-invalid={!!errors.name}
-            {...register("name")}
-          />
-          {errors.name && (
-            <p className="text-xs text-destructive">{errors.name.message}</p>
-          )}
-        </div>
-
-        {/* Business name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="businessName">Business name</Label>
-          <Input
-            id="businessName"
-            placeholder="Optional trading name"
-            {...register("businessName")}
-          />
-        </div>
-
-        {/* Phone */}
-        <div className="space-y-1.5">
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            type="tel"
-            placeholder="+92 300 0000000"
-            {...register("phone")}
-          />
-        </div>
-
-        {/* WhatsApp */}
-        <div className="space-y-1.5">
-          <Label htmlFor="whatsapp">WhatsApp number</Label>
-          <Input
-            id="whatsapp"
-            type="tel"
-            placeholder="If different from phone"
-            {...register("whatsapp")}
-          />
-        </div>
-
-        {/* Payment terms */}
-        <div className="space-y-1.5">
-          <Label htmlFor="paymentTerms">Payment terms</Label>
-          <Input
-            id="paymentTerms"
-            placeholder="e.g. 30 days, advance"
-            {...register("paymentTerms")}
-          />
-        </div>
-
-        {/* Status */}
-        <div className="space-y-1.5">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={statusValue ?? "active"}
-            onValueChange={(val) =>
-              setValue("status", val as "active" | "inactive")
-            }
-          >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-      </div>
-
-      {/* Address (full width) */}
-      <div className="space-y-1.5">
-        <Label htmlFor="address">Address</Label>
-        <Textarea
-          id="address"
-          placeholder="Street address, village, area..."
-          rows={3}
-          {...register("address")}
-        />
-      </div>
-
-      {/* Notes (full width) */}
-      <div className="space-y-1.5">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          placeholder="Any additional notes..."
-          rows={3}
-          {...register("notes")}
-        />
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : isEdit ? "Update supplier" : "Create supplier"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
       </div>
     </form>
   );

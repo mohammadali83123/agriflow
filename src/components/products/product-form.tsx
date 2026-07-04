@@ -18,7 +18,6 @@ import {
 } from "@/components/ui/select";
 import { createProduct, updateProduct } from "@/server/products/actions";
 
-// Local schema for the form — status is required (always has a value in the form)
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   baseUnit: z.string().min(1, "Base unit is required"),
@@ -77,178 +76,197 @@ export function ProductForm({ product }: ProductFormProps) {
     startTransition(async () => {
       if (isEdit) {
         const result = await updateProduct(product.id, values);
-        if ("error" in result && result.error) {
-          console.error(result.error);
-          return;
-        }
+        if ("error" in result && result.error) return;
         router.push(`/products/${product.id}`);
       } else {
         const result = await createProduct(values);
-        if ("error" in result && result.error) {
-          console.error(result.error);
-          return;
-        }
+        if ("error" in result && result.error) return;
         router.push("/products");
       }
     });
   });
 
   return (
-    <form onSubmit={onSubmit} className="space-y-5">
-      {/* Name */}
-      <div className="space-y-1.5">
-        <Label htmlFor="name">
-          Name <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          id="name"
-          placeholder="e.g. Basmati Rice"
-          {...register("name")}
-          aria-invalid={!!errors.name}
-        />
-        {errors.name && (
-          <p className="text-xs text-destructive">{errors.name.message}</p>
-        )}
-      </div>
+    <form onSubmit={onSubmit}>
+      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+        {/* Core fields */}
+        <div className="px-6 py-6 border-b">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+            Product details
+          </p>
+          <div className="space-y-5">
+            <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="name" className="text-sm font-medium">
+                  Name <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="name"
+                  placeholder="e.g. Basmati Rice, Super Kernel"
+                  {...register("name")}
+                  aria-invalid={!!errors.name}
+                />
+                {errors.name && (
+                  <p className="text-xs text-destructive">{errors.name.message}</p>
+                )}
+              </div>
 
-      {/* Base unit */}
-      <div className="space-y-1.5">
-        <Label htmlFor="baseUnit">
-          Base unit <span className="text-destructive">*</span>
-        </Label>
-        <Input
-          id="baseUnit"
-          placeholder="e.g. kg, maund, litre, piece"
-          {...register("baseUnit")}
-          aria-invalid={!!errors.baseUnit}
-        />
-        {errors.baseUnit && (
-          <p className="text-xs text-destructive">{errors.baseUnit.message}</p>
-        )}
-      </div>
+              <div className="space-y-2">
+                <Label htmlFor="baseUnit" className="text-sm font-medium">
+                  Base unit <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="baseUnit"
+                  placeholder="e.g. kg, maund, bag, litre"
+                  {...register("baseUnit")}
+                  aria-invalid={!!errors.baseUnit}
+                />
+                {errors.baseUnit && (
+                  <p className="text-xs text-destructive">{errors.baseUnit.message}</p>
+                )}
+              </div>
 
-      {/* Category + SKU */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="category">Category</Label>
-          <Input
-            id="category"
-            placeholder="e.g. Grain"
-            {...register("category")}
-          />
+              {isEdit && (
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Status</Label>
+                  <Select
+                    value={statusValue}
+                    onValueChange={(val) =>
+                      setValue("status", val as "active" | "inactive")
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                <Input
+                  id="category"
+                  placeholder="e.g. Grain, Paddy, Bran"
+                  {...register("category")}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="sku" className="text-sm font-medium">SKU</Label>
+                <Input
+                  id="sku"
+                  placeholder="e.g. BAS-001"
+                  {...register("sku")}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description" className="text-sm font-medium">
+                Description
+              </Label>
+              <Textarea
+                id="description"
+                placeholder="Optional product description"
+                rows={2}
+                {...register("description")}
+              />
+            </div>
+          </div>
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="sku">SKU</Label>
-          <Input
-            id="sku"
-            placeholder="e.g. BAS-001"
-            {...register("sku")}
-          />
-        </div>
-      </div>
 
-      {/* Base price + Min price */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
-        <div className="space-y-1.5">
-          <Label htmlFor="basePriceRupees">Base price (Rs / base unit)</Label>
-          <Input
-            id="basePriceRupees"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="e.g. 180.00"
-            defaultValue={
-              product?.basePriceMinor != null
-                ? product.basePriceMinor / 100
-                : undefined
-            }
-            onChange={(e) => {
-              const rupees = parseFloat(e.target.value);
-              if (!isNaN(rupees)) {
-                setValue("basePriceMinor", Math.round(rupees * 100));
-              } else {
-                setValue("basePriceMinor", undefined);
-              }
-            }}
-          />
-          {errors.basePriceMinor && (
-            <p className="text-xs text-destructive">
-              {errors.basePriceMinor.message}
-            </p>
-          )}
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="minPriceRupees">Min price (Rs / base unit)</Label>
-          <Input
-            id="minPriceRupees"
-            type="number"
-            step="0.01"
-            min="0"
-            placeholder="e.g. 160.00"
-            defaultValue={
-              product?.minPriceMinor != null
-                ? product.minPriceMinor / 100
-                : undefined
-            }
-            onChange={(e) => {
-              const rupees = parseFloat(e.target.value);
-              if (!isNaN(rupees)) {
-                setValue("minPriceMinor", Math.round(rupees * 100));
-              } else {
-                setValue("minPriceMinor", undefined);
-              }
-            }}
-          />
-          {errors.minPriceMinor && (
-            <p className="text-xs text-destructive">
-              {errors.minPriceMinor.message}
-            </p>
-          )}
-        </div>
-      </div>
+        {/* Pricing */}
+        <div className="px-6 py-6 border-b">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+            Pricing
+          </p>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="basePriceRupees" className="text-sm font-medium">
+                Base price (Rs / {watch("baseUnit") || "unit"})
+              </Label>
+              <Input
+                id="basePriceRupees"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="e.g. 180.00"
+                defaultValue={
+                  product?.basePriceMinor != null
+                    ? product.basePriceMinor / 100
+                    : undefined
+                }
+                onChange={(e) => {
+                  const rupees = parseFloat(e.target.value);
+                  setValue(
+                    "basePriceMinor",
+                    !isNaN(rupees) ? Math.round(rupees * 100) : undefined
+                  );
+                }}
+              />
+              {errors.basePriceMinor && (
+                <p className="text-xs text-destructive">
+                  {errors.basePriceMinor.message}
+                </p>
+              )}
+            </div>
 
-      {/* Description */}
-      <div className="space-y-1.5">
-        <Label htmlFor="description">Description</Label>
-        <Textarea
-          id="description"
-          placeholder="Optional product description"
-          {...register("description")}
-        />
-      </div>
+            <div className="space-y-2">
+              <Label htmlFor="minPriceRupees" className="text-sm font-medium">
+                Minimum price (Rs / {watch("baseUnit") || "unit"})
+              </Label>
+              <Input
+                id="minPriceRupees"
+                type="number"
+                step="0.01"
+                min="0"
+                placeholder="e.g. 160.00"
+                defaultValue={
+                  product?.minPriceMinor != null
+                    ? product.minPriceMinor / 100
+                    : undefined
+                }
+                onChange={(e) => {
+                  const rupees = parseFloat(e.target.value);
+                  setValue(
+                    "minPriceMinor",
+                    !isNaN(rupees) ? Math.round(rupees * 100) : undefined
+                  );
+                }}
+              />
+              {errors.minPriceMinor && (
+                <p className="text-xs text-destructive">
+                  {errors.minPriceMinor.message}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
 
-      {/* Status — only in edit mode */}
-      {isEdit && (
-        <div className="space-y-1.5">
-          <Label>Status</Label>
-          <Select
-            value={statusValue}
-            onValueChange={(val) =>
-              setValue("status", val as "active" | "inactive")
-            }
+        {/* Action row */}
+        <div className="px-6 py-4 bg-muted/20 flex items-center gap-3">
+          <Button type="submit" size="lg" disabled={isPending}>
+            {isPending
+              ? "Saving..."
+              : isEdit
+              ? "Update product"
+              : "Create product"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={() => router.back()}
+            disabled={isPending}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
+            Cancel
+          </Button>
         </div>
-      )}
-
-      <Button
-        type="submit"
-        className="w-full"
-        disabled={isPending}
-      >
-        {isPending
-          ? "Saving..."
-          : isEdit
-          ? "Update product"
-          : "Create product"}
-      </Button>
+      </div>
     </form>
   );
 }

@@ -20,7 +20,6 @@ import { customer } from "@/lib/db/schema";
 import { toRupees } from "@/lib/money";
 import { useState } from "react";
 
-// Local form schema — no .default() to avoid input/output type mismatch with RHF
 const formSchema = z.object({
   name: z.string().min(1, "Name is required"),
   phone: z.string().min(1, "Phone is required"),
@@ -77,175 +76,197 @@ export function CustomerForm({ customer: existing }: CustomerFormProps) {
         await updateCustomer(existing.id, data);
         router.push(`/customers/${existing.id}`);
       } else {
-        const created = await createCustomer(data);
-        if (created) {
-          router.push(`/customers/${created.id}`);
-        } else {
-          router.push("/customers");
-        }
+        await createCustomer(data);
+        router.push("/customers");
       }
-      router.refresh();
     } catch (err) {
       setServerError(err instanceof Error ? err.message : "Something went wrong");
     }
   }
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 max-w-2xl">
+    <form onSubmit={handleSubmit(onSubmit)}>
       {serverError && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+        <div className="mb-5 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive">
           {serverError}
         </div>
       )}
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        {/* Name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="name">
-            Name <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="name"
-            placeholder="Customer name"
-            aria-invalid={!!errors.name}
-            {...register("name")}
-          />
-          {errors.name && (
-            <p className="text-xs text-destructive">{errors.name.message}</p>
-          )}
+      <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
+        {/* Contact information */}
+        <div className="px-6 py-6 border-b">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+            Contact information
+          </p>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium">
+                Name <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="name"
+                placeholder="Customer name"
+                aria-invalid={!!errors.name}
+                {...register("name")}
+              />
+              {errors.name && (
+                <p className="text-xs text-destructive">{errors.name.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="phone" className="text-sm font-medium">
+                Phone <span className="text-destructive">*</span>
+              </Label>
+              <Input
+                id="phone"
+                type="tel"
+                placeholder="+92 300 0000000"
+                aria-invalid={!!errors.phone}
+                {...register("phone")}
+              />
+              {errors.phone && (
+                <p className="text-xs text-destructive">{errors.phone.message}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="businessName" className="text-sm font-medium">
+                Business name
+              </Label>
+              <Input
+                id="businessName"
+                placeholder="Trading name (optional)"
+                {...register("businessName")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="whatsapp" className="text-sm font-medium">
+                WhatsApp
+              </Label>
+              <Input
+                id="whatsapp"
+                type="tel"
+                placeholder="If different from phone"
+                {...register("whatsapp")}
+              />
+            </div>
+
+            <div className="space-y-2 sm:col-span-2">
+              <Label htmlFor="city" className="text-sm font-medium">City</Label>
+              <Input
+                id="city"
+                placeholder="e.g. Lahore, Faisalabad, Gujranwala"
+                {...register("city")}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* Phone */}
-        <div className="space-y-1.5">
-          <Label htmlFor="phone">
-            Phone <span className="text-destructive">*</span>
-          </Label>
-          <Input
-            id="phone"
-            type="tel"
-            placeholder="+92 300 0000000"
-            aria-invalid={!!errors.phone}
-            {...register("phone")}
-          />
-          {errors.phone && (
-            <p className="text-xs text-destructive">{errors.phone.message}</p>
-          )}
+        {/* Financial */}
+        <div className="px-6 py-6 border-b">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+            Financial
+          </p>
+          <div className="grid grid-cols-1 gap-5 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="creditLimitRupees" className="text-sm font-medium">
+                Credit limit (Rs)
+              </Label>
+              <Input
+                id="creditLimitRupees"
+                type="number"
+                step="1"
+                min="0"
+                placeholder="0"
+                aria-invalid={!!errors.creditLimitRupees}
+                {...register("creditLimitRupees", { valueAsNumber: true })}
+              />
+              {errors.creditLimitRupees && (
+                <p className="text-xs text-destructive">
+                  {errors.creditLimitRupees.message}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="paymentTerms" className="text-sm font-medium">
+                Payment terms
+              </Label>
+              <Input
+                id="paymentTerms"
+                placeholder="e.g. COD, 30 days"
+                {...register("paymentTerms")}
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status" className="text-sm font-medium">Status</Label>
+              <Select
+                value={statusValue ?? "active"}
+                onValueChange={(val) =>
+                  setValue("status", val as "active" | "inactive")
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
         </div>
 
-        {/* Business name */}
-        <div className="space-y-1.5">
-          <Label htmlFor="businessName">Business name</Label>
-          <Input
-            id="businessName"
-            placeholder="Optional trading name"
-            {...register("businessName")}
-          />
+        {/* Additional details */}
+        <div className="px-6 py-6 border-b">
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-5">
+            Additional details
+          </p>
+          <div className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="address" className="text-sm font-medium">Address</Label>
+              <Textarea
+                id="address"
+                placeholder="Street address, area..."
+                rows={2}
+                {...register("address")}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="notes" className="text-sm font-medium">Notes</Label>
+              <Textarea
+                id="notes"
+                placeholder="Any additional notes..."
+                rows={2}
+                {...register("notes")}
+              />
+            </div>
+          </div>
         </div>
 
-        {/* WhatsApp */}
-        <div className="space-y-1.5">
-          <Label htmlFor="whatsapp">WhatsApp number</Label>
-          <Input
-            id="whatsapp"
-            type="tel"
-            placeholder="If different from phone"
-            {...register("whatsapp")}
-          />
-        </div>
-
-        {/* City */}
-        <div className="space-y-1.5">
-          <Label htmlFor="city">City</Label>
-          <Input
-            id="city"
-            placeholder="e.g. Lahore"
-            {...register("city")}
-          />
-        </div>
-
-        {/* Credit limit */}
-        <div className="space-y-1.5">
-          <Label htmlFor="creditLimitRupees">Credit limit (Rs)</Label>
-          <Input
-            id="creditLimitRupees"
-            type="number"
-            step="1"
-            min="0"
-            placeholder="0"
-            aria-invalid={!!errors.creditLimitRupees}
-            {...register("creditLimitRupees", { valueAsNumber: true })}
-          />
-          {errors.creditLimitRupees && (
-            <p className="text-xs text-destructive">
-              {errors.creditLimitRupees.message}
-            </p>
-          )}
-        </div>
-
-        {/* Payment terms */}
-        <div className="space-y-1.5">
-          <Label htmlFor="paymentTerms">Payment terms</Label>
-          <Input
-            id="paymentTerms"
-            placeholder="e.g. 30 days, COD"
-            {...register("paymentTerms")}
-          />
-        </div>
-
-        {/* Status */}
-        <div className="space-y-1.5">
-          <Label htmlFor="status">Status</Label>
-          <Select
-            value={statusValue ?? "active"}
-            onValueChange={(val) =>
-              setValue("status", val as "active" | "inactive")
-            }
+        {/* Action row */}
+        <div className="px-6 py-4 bg-muted/20 flex items-center gap-3">
+          <Button type="submit" size="lg" disabled={isSubmitting}>
+            {isSubmitting
+              ? "Saving..."
+              : isEdit
+              ? "Update customer"
+              : "Create customer"}
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            size="lg"
+            onClick={() => router.back()}
+            disabled={isSubmitting}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="active">Active</SelectItem>
-              <SelectItem value="inactive">Inactive</SelectItem>
-            </SelectContent>
-          </Select>
+            Cancel
+          </Button>
         </div>
-      </div>
-
-      {/* Address (full width) */}
-      <div className="space-y-1.5">
-        <Label htmlFor="address">Address</Label>
-        <Textarea
-          id="address"
-          placeholder="Street address, area..."
-          rows={3}
-          {...register("address")}
-        />
-      </div>
-
-      {/* Notes (full width) */}
-      <div className="space-y-1.5">
-        <Label htmlFor="notes">Notes</Label>
-        <Textarea
-          id="notes"
-          placeholder="Any additional notes..."
-          rows={3}
-          {...register("notes")}
-        />
-      </div>
-
-      <div className="flex gap-3 pt-2">
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? "Saving..." : isEdit ? "Update customer" : "Create customer"}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => router.back()}
-          disabled={isSubmitting}
-        >
-          Cancel
-        </Button>
       </div>
     </form>
   );
