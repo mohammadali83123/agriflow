@@ -1,5 +1,6 @@
 import { Users } from "lucide-react";
 import { listAllUsersWithOrgCount } from "@/server/admin/actions";
+import { DeleteUserButton } from "./delete-user-button";
 
 export const metadata = { title: "Users — Admin" };
 export const dynamic = "force-dynamic";
@@ -46,6 +47,7 @@ export default async function AdminUsersPage() {
                   <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wide">
                     Signed up
                   </th>
+                  <th className="px-4 py-3" />
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -70,6 +72,9 @@ export default async function AdminUsersPage() {
                     </td>
                     <td className="px-4 py-3.5 text-muted-foreground text-xs">
                       {new Date(u.createdAt).toLocaleDateString("en-PK")}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      <DeleteUserButton userId={u.id} userEmail={u.email} />
                     </td>
                   </tr>
                 ))}

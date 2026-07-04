@@ -270,3 +270,21 @@ export async function createOrgAndInviteOwner(
 
   redirect("/admin/organizations");
 }
+
+/** Hard-delete an organization and all its data (cascade). */
+export async function deleteOrganization(orgId: string): Promise<{ error?: string }> {
+  await requirePlatformAdmin();
+  if (!orgId) return { error: "Missing org ID." };
+
+  await db.delete(schema.organization).where(eq(schema.organization.id, orgId));
+  return {};
+}
+
+/** Hard-delete a platform user and all their sessions/memberships. */
+export async function deleteUser(userId: string): Promise<{ error?: string }> {
+  await requirePlatformAdmin();
+  if (!userId) return { error: "Missing user ID." };
+
+  await db.delete(schema.user).where(eq(schema.user.id, userId));
+  return {};
+}

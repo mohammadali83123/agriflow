@@ -13,6 +13,7 @@ import {
 import { getOrgDetail } from "@/server/admin/actions";
 import { formatRupees } from "@/lib/money";
 import { CopyInviteButton } from "./copy-invite-button";
+import { DeleteOrgButton } from "./delete-org-button";
 
 export const dynamic = "force-dynamic";
 
@@ -108,7 +109,10 @@ export default async function OrgDetailPage({
             </div>
           </div>
         </div>
-        {org.slug && <CopyInviteButton slug={org.slug} />}
+        <div className="flex items-center gap-2">
+          {org.slug && <CopyInviteButton slug={org.slug} />}
+          <DeleteOrgButton orgId={org.id} orgName={org.name} />
+        </div>
       </div>
 
       {/* Stats */}
