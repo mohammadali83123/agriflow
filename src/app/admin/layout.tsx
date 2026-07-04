@@ -1,4 +1,3 @@
-import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Wheat, Building2, Users, ArrowLeft } from "lucide-react";
 import { requirePlatformAdmin } from "@/lib/db/scoped";
@@ -10,8 +9,8 @@ export default async function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Gate: non-admins are redirected to /dashboard
-  await requirePlatformAdmin().catch(() => redirect("/dashboard"));
+  // Gate: redirects unauthenticated users to /sign-in, non-admins to /dashboard
+  await requirePlatformAdmin();
 
   return (
     <div className="min-h-screen bg-background">

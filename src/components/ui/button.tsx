@@ -1,3 +1,4 @@
+import * as React from "react"
 import { Button as ButtonPrimitive } from "@base-ui/react/button"
 import { cva, type VariantProps } from "class-variance-authority"
 
@@ -40,12 +41,34 @@ const buttonVariants = cva(
   }
 )
 
+// ButtonPrimitive.Props includes the `render` prop (for rendering as Link, etc.).
+// We extend it with the native `type` attribute so `type="submit"` is properly typed.
+type ButtonProps = ButtonPrimitive.Props &
+  VariantProps<typeof buttonVariants> & {
+    type?: "button" | "submit" | "reset"
+  }
+
 function Button({
   className,
   variant = "default",
   size = "default",
+  type = "button",
   ...props
-}: ButtonPrimitive.Props & VariantProps<typeof buttonVariants>) {
+}: ButtonProps) {
+  // @base-ui/react/button hardcodes type="button" in useButton, overriding our prop.
+  // For submit/reset buttons (forms), bypass ButtonPrimitive and use a native element.
+  if (type === "submit" || type === "reset") {
+    const { render: _render, ...nativeProps } = props as ButtonProps & { render?: unknown }
+    return (
+      <button
+        type={type}
+        data-slot="button"
+        className={cn(buttonVariants({ variant, size, className }))}
+        {...(nativeProps as React.ComponentProps<"button">)}
+      />
+    )
+  }
+
   return (
     <ButtonPrimitive
       data-slot="button"
@@ -55,4 +78,4 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+export { Button, buttonVariants, type ButtonProps }
