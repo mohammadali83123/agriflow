@@ -136,6 +136,9 @@ export function AdjustForm({ products, variants, warehouses }: AdjustFormProps) 
                 Product <span className="text-destructive">*</span>
               </Label>
               <Select
+                items={Object.fromEntries(
+                  products.filter((p) => p.status === "active").map((p) => [p.id, p.name])
+                )}
                 onValueChange={(val) => {
                   setValue("productId", val as string);
                   setValue("variantId", undefined);
@@ -164,7 +167,10 @@ export function AdjustForm({ products, variants, warehouses }: AdjustFormProps) 
             {productVariants.length > 0 && (
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Variant</Label>
-                <Select onValueChange={(val) => setValue("variantId", val as string)}>
+                <Select
+                  items={Object.fromEntries(productVariants.map((v) => [v.id, v.name]))}
+                  onValueChange={(val) => setValue("variantId", val as string)}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="All variants" />
                   </SelectTrigger>
@@ -184,6 +190,9 @@ export function AdjustForm({ products, variants, warehouses }: AdjustFormProps) 
                 Warehouse <span className="text-destructive">*</span>
               </Label>
               <Select
+                items={Object.fromEntries(
+                  warehouses.map((w) => [w.id, w.isDefault ? `${w.name} (default)` : w.name])
+                )}
                 defaultValue={defaultWarehouse?.id ?? undefined}
                 onValueChange={(val) => setValue("warehouseId", val as string)}
               >
@@ -263,6 +272,10 @@ export function AdjustForm({ products, variants, warehouses }: AdjustFormProps) 
                 )}
               </Label>
               <Select
+                items={{
+                  none: "No reason",
+                  ...Object.fromEntries(ADJUSTMENT_REASONS.map((r) => [r.value, r.label])),
+                }}
                 onValueChange={(val) =>
                   setValue("reason", (val as string) === "none" ? undefined : (val as string))
                 }

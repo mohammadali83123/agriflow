@@ -129,6 +129,9 @@ export function ReceiveForm({
                   Product <span className="text-destructive">*</span>
                 </Label>
                 <Select
+                  items={Object.fromEntries(
+                    products.filter((p) => p.status === "active").map((p) => [p.id, p.name])
+                  )}
                   onValueChange={(val) => {
                     setValue("productId", val as string);
                     setValue("variantId", undefined);
@@ -160,6 +163,7 @@ export function ReceiveForm({
                     Variant
                   </Label>
                   <Select
+                    items={Object.fromEntries(productVariants.map((v) => [v.id, v.name]))}
                     onValueChange={(val) => setValue("variantId", val as string)}
                   >
                     <SelectTrigger className="w-full">
@@ -181,6 +185,9 @@ export function ReceiveForm({
                   Warehouse <span className="text-destructive">*</span>
                 </Label>
                 <Select
+                  items={Object.fromEntries(
+                    warehouses.map((w) => [w.id, w.isDefault ? `${w.name} (default)` : w.name])
+                  )}
                   defaultValue={defaultWarehouse?.id ?? undefined}
                   onValueChange={(val) => setValue("warehouseId", val as string)}
                 >
@@ -300,6 +307,10 @@ export function ReceiveForm({
                   Supplier (optional)
                 </Label>
                 <Select
+                  items={{
+                    none: "No supplier",
+                    ...Object.fromEntries(suppliers.map((s) => [s.id, s.name])),
+                  }}
                   onValueChange={(val) =>
                     setValue("supplierId", (val as string) === "none" ? undefined : (val as string))
                   }
