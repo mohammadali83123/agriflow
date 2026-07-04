@@ -10,7 +10,10 @@ import { ContactsSection } from "@/components/customers/contacts-section";
 import { DeliveryAddressesSection } from "@/components/customers/delivery-addresses-section";
 import { requireOrg } from "@/lib/db/scoped";
 import { can } from "@/lib/rbac";
+import { getCustomerBalance } from "@/server/ledger/engine";
+import { db } from "@/lib/db";
 
+export const dynamic = "force-dynamic";
 export const metadata = { title: "Customer" };
 
 export default async function CustomerDetailPage({
@@ -27,10 +30,13 @@ export default async function CustomerDetailPage({
     notFound();
   }
 
-  const { role } = await requireOrg();
+  const { orgId, role } = await requireOrg();
   const canWrite = can(role, "customers:write");
 
   const { contacts, addresses, ...customer } = data;
+
+  // Live ledger balance — Sprint 8
+  const balance = await getCustomerBalance(db, orgId, customer.id);
 
   return (
     <div className="p-4 md:p-6 max-w-4xl mx-auto space-y-6">
@@ -117,13 +123,38 @@ export default async function CustomerDetailPage({
             </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Outstanding balance</p>
-            <p className="text-sm text-muted-foreground">— (ledger Sprint 8)</p>
+            <p className="text-xs text-muted-foreground">Total invoiced</p>
+            <p className="text-sm font-medium">
+              {formatRupees(balance.totalInvoiced)}
+            </p>
           </div>
           <div>
-            <p className="text-xs text-muted-foreground">Available credit</p>
-            <p className="text-sm text-muted-foreground">— (ledger Sprint 8)</p>
+            <p className="text-xs text-muted-foreground">Total paid</p>
+            <p className="text-sm font-medium text-emerald-700">
+              {formatRupees(balance.totalPaid)}
+            </p>
           </div>
+          <div>
+            <p className="text-xs text-muted-foreground">Outstanding balance</p>
+            <p className={cn(
+              "text-sm font-semibold",
+              balance.outstanding > 0n ? "text-red-600" : "text-muted-foreground"
+            )}>
+              {balance.outstanding > 0n
+                ? formatRupees(balance.outstanding)
+                : "—"}
+            </p>
+          </div>
+          {customer.creditLimitMinor > 0n && balance.outstanding > 0n && (
+            <div>
+              <p className="text-xs text-muted-foreground">Available credit</p>
+              <p className="text-sm font-medium">
+                {balance.outstanding < customer.creditLimitMinor
+                  ? formatRupees(customer.creditLimitMinor - balance.outstanding)
+                  : <span className="text-red-600">Limit exceeded</span>}
+              </p>
+            </div>
+          )}
           {customer.paymentTerms && (
             <div>
               <p className="text-xs text-muted-foreground">Payment terms</p>
