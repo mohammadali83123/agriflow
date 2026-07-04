@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatRupees } from "@/lib/money";
@@ -82,7 +82,7 @@ export function OrderDetailClient({
   canCancel,
 }: Props) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [isPending, setIsPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showAddLine, setShowAddLine] = useState(false);
   const [showDispatchForm, setShowDispatchForm] = useState(false);
@@ -113,14 +113,11 @@ export function OrderDetailClient({
 
   function handleAction(action: () => Promise<void>) {
     setError(null);
-    startTransition(async () => {
-      try {
-        await action();
-        router.refresh();
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Something went wrong");
-      }
-    });
+    setIsPending(true);
+    action()
+      .then(() => router.refresh())
+      .catch((err) => setError(err instanceof Error ? err.message : "Something went wrong"))
+      .finally(() => setIsPending(false));
   }
 
   async function handleAddLine(e: React.FormEvent) {
@@ -381,7 +378,9 @@ export function OrderDetailClient({
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select product" />
+                    <SelectValue placeholder="Select product">
+                      {products.find((p) => p.id === lineProductId)?.name ?? "Select product"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {products.map((p) => (
@@ -400,7 +399,9 @@ export function OrderDetailClient({
                   required
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select warehouse" />
+                    <SelectValue placeholder="Select warehouse">
+                      {warehouses.find((w) => w.id === lineWarehouseId)?.name ?? "Select warehouse"}
+                    </SelectValue>
                   </SelectTrigger>
                   <SelectContent>
                     {warehouses.map((w) => (
@@ -424,6 +425,9 @@ export function OrderDetailClient({
                 />
               </div>
             </div>
+            <p className="text-xs text-muted-foreground">
+              Unit price is auto-resolved from the current day&apos;s pricing for the selected product.
+            </p>
             <div className="flex gap-2">
               <Button type="submit" size="sm" disabled={lineAdding}>
                 {lineAdding ? "Adding..." : "Add line"}
@@ -533,7 +537,11 @@ export function OrderDetailClient({
                     }
                   >
                     <SelectTrigger>
-                      <SelectValue />
+                      <SelectValue>
+                        {dispatchMethod === "company_transport"
+                          ? "Company Transport"
+                          : "Customer Pickup"}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="company_transport">

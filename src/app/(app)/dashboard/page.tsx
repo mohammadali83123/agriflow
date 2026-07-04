@@ -62,10 +62,34 @@ async function fetchOwnerKpis(orgId: string) {
       )
     );
 
-  // 3. Inventory value — SUM(quantityDelta * unitCostMinor) over all transactions
+  // 3. Inventory value — current_qty × weighted-avg incoming cost.
+  //    Only positive (inbound) transactions carry a unit cost; outgoing types
+  //    (reserve, dispatch, adjustment-out) have unitCostMinor = null.
+  //    Formula: SUM(all deltas) × (SUM(in_qty × in_cost) / SUM(in_qty))
   const [inventoryRow] = await db
     .select({
-      value: sql<string>`COALESCE(SUM(CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC) * CAST(${schema.inventoryTransaction.unitCostMinor} AS NUMERIC)), 0)`,
+      value: sql<string>`
+        COALESCE(
+          GREATEST(SUM(CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC)), 0)
+          * CASE
+              WHEN SUM(CASE WHEN CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC) > 0
+                            AND ${schema.inventoryTransaction.unitCostMinor} IS NOT NULL
+                       THEN CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC)
+                       ELSE 0 END) > 0
+              THEN SUM(CASE WHEN CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC) > 0
+                            AND ${schema.inventoryTransaction.unitCostMinor} IS NOT NULL
+                       THEN CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC)
+                            * CAST(${schema.inventoryTransaction.unitCostMinor} AS NUMERIC)
+                       ELSE 0 END)
+                   / SUM(CASE WHEN CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC) > 0
+                               AND ${schema.inventoryTransaction.unitCostMinor} IS NOT NULL
+                          THEN CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC)
+                          ELSE 0 END)
+              ELSE 0
+            END,
+          0
+        )
+      `,
     })
     .from(schema.inventoryTransaction)
     .where(eq(schema.inventoryTransaction.orgId, orgId));

@@ -619,6 +619,21 @@ export async function createDispatch(orderId: string, input: unknown) {
       quantity: dl.quantity.toFixed(3),
     });
 
+    // Release the previously reserved stock for this quantity so that the
+    // subsequent dispatch deduction doesn't double-count. Net effect on
+    // available stock = 0 (goods were already earmarked by reserve).
+    await recordStockMovement(db, {
+      orgId,
+      productId: line.productId,
+      variantId: line.variantId ?? undefined,
+      warehouseId: line.warehouseId,
+      quantityDelta: `${dl.quantity}`,
+      type: "release",
+      refType: "order",
+      refId: orderId,
+      createdBy: session.user.id,
+    });
+
     await recordStockMovement(db, {
       orgId,
       productId: line.productId,
