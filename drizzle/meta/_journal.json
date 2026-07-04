@@ -29,6 +29,13 @@
       "when": 1783126784956,
       "tag": "0003_nappy_the_twelve",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783128281920,
+      "tag": "0004_deep_lucky_pierre",
+      "breakpoints": true
     }
   ]
 }
