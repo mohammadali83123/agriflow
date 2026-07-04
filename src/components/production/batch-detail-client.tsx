@@ -16,6 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { formatRupees } from "@/lib/money";
 import {
   addInput,
@@ -414,6 +422,7 @@ export function BatchDetailClient({ batch, products }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const isDraft = batch.status === "draft";
   const hasInputs = batch.inputs.length > 0;
@@ -479,11 +488,11 @@ export function BatchDetailClient({ batch, products }: Props) {
   };
 
   const handleDelete = () => {
-    if (!confirm("Delete this draft batch? This cannot be undone.")) return;
     startTransition(async () => {
       const result = await deleteBatch(batch.id);
       if (result.error) {
         setError(typeof result.error === "string" ? result.error : "Failed to delete");
+        setShowDeleteConfirm(false);
         return;
       }
       router.push("/production");
@@ -526,7 +535,7 @@ export function BatchDetailClient({ batch, products }: Props) {
             <Button
               variant="outline"
               size="sm"
-              onClick={handleDelete}
+              onClick={() => setShowDeleteConfirm(true)}
               disabled={isPending}
               className="gap-1.5 text-destructive hover:text-destructive"
             >
@@ -536,6 +545,33 @@ export function BatchDetailClient({ batch, products }: Props) {
           </div>
         )}
       </div>
+
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete draft batch?</DialogTitle>
+            <DialogDescription>
+              This will permanently delete <strong>{batch.batchNumber}</strong> and all its inputs and outputs. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(false)}
+              disabled={isPending}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleDelete}
+              disabled={isPending}
+            >
+              {isPending ? "Deleting..." : "Delete batch"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {error && (
         <div className="rounded-lg border border-destructive/30 bg-destructive/10 px-4 py-3 text-sm text-destructive flex items-start gap-2">
