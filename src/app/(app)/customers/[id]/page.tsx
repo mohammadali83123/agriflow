@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Pencil, Phone, MapPin, FileText } from "lucide-react";
 import { getCustomer } from "@/server/customers/actions";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { formatRupees } from "@/lib/money";
 import { DeleteCustomerButton } from "@/components/customers/delete-customer-button";
@@ -60,14 +60,13 @@ export default async function CustomerDetailPage({
           </span>
           {canWrite && (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                render={<Link href={`/customers/${customer.id}/edit`} />}
+              <Link
+                href={`/customers/${customer.id}/edit`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
               >
                 <Pencil className="size-3.5" />
                 Edit
-              </Button>
+              </Link>
               <DeleteCustomerButton id={customer.id} />
             </>
           )}

@@ -4,7 +4,7 @@ export const metadata = { title: "Products" };
 import Link from "next/link";
 import { listProducts } from "@/server/products/actions";
 import { ProductsClient } from "@/components/products/products-client";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export default async function ProductsPage() {
   const result = await listProducts();
@@ -21,7 +21,7 @@ export default async function ProductsPage() {
             </span>
           )}
         </div>
-        <Button render={<Link href="/products/new" />}>New product</Button>
+        <Link href="/products/new" className={buttonVariants()}>New product</Link>
       </div>
       <ProductsClient products={products} />
     </div>

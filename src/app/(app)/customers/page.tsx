@@ -1,9 +1,9 @@
 export const dynamic = "force-dynamic";
 export const metadata = { title: "Customers" };
 
-import { listCustomers } from "@/server/customers/actions";
-import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { listCustomers } from "@/server/customers/actions";
+import { buttonVariants } from "@/components/ui/button";
 import { CustomersTable } from "@/components/customers/customers-table";
 
 export default async function CustomersPage() {
@@ -20,9 +20,9 @@ export default async function CustomersPage() {
             </span>
           )}
         </div>
-        <Button render={<Link href="/customers/new" />}>
+        <Link href="/customers/new" className={buttonVariants()}>
           New customer
-        </Button>
+        </Link>
       </div>
       <CustomersTable customers={customers} />
     </div>

@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ChevronLeft, Pencil, Phone, MapPin, FileText } from "lucide-react";
 import { getSupplier } from "@/server/suppliers/actions";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { DeleteSupplierButton } from "@/components/suppliers/delete-supplier-button";
 import { requireOrg } from "@/lib/db/scoped";
@@ -64,14 +64,13 @@ export default async function SupplierDetailPage({
           </span>
           {canWrite && (
             <>
-              <Button
-                variant="outline"
-                size="sm"
-                render={<Link href={`/suppliers/${supplier.id}/edit`} />}
+              <Link
+                href={`/suppliers/${supplier.id}/edit`}
+                className={cn(buttonVariants({ variant: "outline", size: "sm" }))}
               >
                 <Pencil className="size-3.5" />
                 Edit
-              </Button>
+              </Link>
               <DeleteSupplierButton id={supplier.id} />
             </>
           )}
