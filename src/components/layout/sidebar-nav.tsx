@@ -12,6 +12,7 @@ import {
   Banknote,
   Factory,
   Settings,
+  FileText,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -27,6 +28,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Banknote,
   Factory,
   Settings,
+  FileText,
 };
 
 export function SidebarNav({ items }: { items: NavItem[] }) {
@@ -45,11 +47,11 @@ export function SidebarNav({ items }: { items: NavItem[] }) {
             className={cn(
               "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
               active
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                ? "bg-primary/10 text-primary border-l-2 border-primary"
+                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
             )}
           >
-            <Icon className="size-4 shrink-0" />
+            <Icon className={cn("size-4 shrink-0", active && "text-primary")} />
             {item.label}
           </Link>
         );

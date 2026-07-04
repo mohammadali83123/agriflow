@@ -103,27 +103,19 @@ export default async function InvoicesPage({
         </div>
       ) : (
         <div className="rounded-2xl border overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
-                {[
-                  "Invoice #",
-                  "Customer",
-                  "Issue Date",
-                  "Due Date",
-                  "Total",
-                  "Paid",
-                  "Outstanding",
-                  "Status",
-                  "",
-                ].map((h) => (
-                  <th
-                    key={h}
-                    className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                  >
-                    {h}
-                  </th>
-                ))}
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Invoice #</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Issue Date</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Due Date</th>
+                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total</th>
+                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Paid</th>
+                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Outstanding</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+                <th className="py-3.5 px-4" />
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -142,13 +134,13 @@ export default async function InvoicesPage({
                   <td className="py-4 px-4 text-sm text-muted-foreground">
                     {inv.dueDate ?? "—"}
                   </td>
-                  <td className="py-4 px-4 text-sm font-medium">
+                  <td className="py-4 px-4 text-sm font-mono tabular-nums text-right font-medium">
                     {formatRupees(inv.totalMinor)}
                   </td>
-                  <td className="py-4 px-4 text-sm text-emerald-700">
+                  <td className="py-4 px-4 text-sm font-mono tabular-nums text-right text-emerald-700">
                     {formatRupees(inv.amountPaidMinor)}
                   </td>
-                  <td className="py-4 px-4 text-sm font-medium">
+                  <td className="py-4 px-4 text-sm font-mono tabular-nums text-right font-medium">
                     {inv.outstandingMinor > 0 ? (
                       <span className="text-red-600">
                         {formatRupees(inv.outstandingMinor)}
@@ -170,6 +162,7 @@ export default async function InvoicesPage({
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

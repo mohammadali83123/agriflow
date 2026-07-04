@@ -40,6 +40,7 @@ export function BatchesTable({ batches }: BatchesTableProps) {
 
   return (
     <div className="rounded-2xl border overflow-hidden shadow-sm">
+      <div className="overflow-x-auto">
       <table className="w-full">
         <thead className="border-b bg-muted/40">
           <tr>
@@ -115,6 +116,7 @@ export function BatchesTable({ batches }: BatchesTableProps) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

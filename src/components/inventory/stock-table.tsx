@@ -43,6 +43,7 @@ export function StockTable({ stockLevels }: StockTableProps) {
 
   return (
     <div className="rounded-2xl border overflow-hidden shadow-sm">
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead className="bg-muted/40">
           <tr>
@@ -89,18 +90,19 @@ export function StockTable({ stockLevels }: StockTableProps) {
                   {row.baseUnit}
                 </span>
               </td>
-              <td className="px-4 py-4 text-right tabular-nums hidden sm:table-cell text-muted-foreground">
+              <td className="px-4 py-4 text-right font-mono tabular-nums hidden sm:table-cell text-muted-foreground">
                 {row.avgCostMinor > 0n
                   ? formatRupees(row.avgCostMinor)
                   : "—"}
               </td>
-              <td className="px-4 py-4 text-right tabular-nums hidden md:table-cell">
+              <td className="px-4 py-4 text-right font-mono tabular-nums hidden md:table-cell">
                 {row.valueMinor > 0n ? formatRupees(row.valueMinor) : "—"}
               </td>
             </tr>
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

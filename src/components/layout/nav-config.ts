@@ -18,7 +18,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: "Production", href: "/production", iconName: "Factory" },
 ];
 
-const OPERATOR_HREFS = new Set(["/dashboard", "/inventory", "/orders", "/payments"]);
+const OPERATOR_HREFS = new Set(["/dashboard", "/inventory", "/orders", "/invoices", "/payments"]);
 
 export function getNavItems(role: Role): NavItem[] {
   if (role === "owner") return ALL_NAV_ITEMS;
