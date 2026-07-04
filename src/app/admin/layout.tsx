@@ -33,8 +33,14 @@ export default async function AdminLayout({
             href="/admin"
             className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
+            Overview
+          </Link>
+          <Link
+            href="/admin/organizations"
+            className="flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+          >
             <Building2 className="size-3.5" />
-            Orgs
+            Organizations
           </Link>
           <Link
             href="/admin/users"
