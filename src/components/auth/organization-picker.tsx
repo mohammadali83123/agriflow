@@ -27,7 +27,7 @@ export function OrganizationPicker({
       setPendingId(null);
       return;
     }
-    router.push("/dashboard");
+    router.replace("/dashboard");
   }
 
   return (
