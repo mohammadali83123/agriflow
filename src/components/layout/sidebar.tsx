@@ -65,6 +65,18 @@ export function Sidebar({
 
       {/* User + sign out */}
       <div className="px-3 py-3 shrink-0">{userSection}</div>
+
+      {/* Brand footer */}
+      <div className="px-4 py-2.5 border-t border-sidebar-border shrink-0">
+        <div className="flex items-center gap-1.5">
+          <div className="flex size-4 items-center justify-center rounded bg-primary/15 text-primary shrink-0">
+            <Wheat className="size-2.5" />
+          </div>
+          <span className="text-[10px] font-semibold tracking-widest uppercase text-muted-foreground/50">
+            AgriFlow
+          </span>
+        </div>
+      </div>
     </aside>
   );
 }
