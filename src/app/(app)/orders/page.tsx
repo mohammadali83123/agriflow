@@ -18,14 +18,14 @@ const STATUS_TABS: { label: string; value: OrderStatus | "all" }[] = [
 
 function statusBadge(status: OrderStatus) {
   const cls: Record<OrderStatus, string> = {
-    draft: "bg-gray-100 text-gray-700",
-    confirmed: "bg-blue-100 text-blue-700",
-    reserved: "bg-blue-100 text-blue-700",
-    ready: "bg-amber-100 text-amber-700",
-    dispatched: "bg-green-100 text-green-700",
-    delivered: "bg-green-100 text-green-700",
-    completed: "bg-green-100 text-green-700",
-    cancelled: "bg-red-100 text-red-700",
+    draft: "ring-1 ring-gray-300/60 bg-gray-50 text-gray-600",
+    confirmed: "ring-1 ring-blue-400/40 bg-blue-50 text-blue-700",
+    reserved: "ring-1 ring-blue-400/40 bg-blue-50 text-blue-700",
+    ready: "ring-1 ring-amber-400/40 bg-amber-50 text-amber-700",
+    dispatched: "ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700",
+    delivered: "ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700",
+    completed: "ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700",
+    cancelled: "ring-1 ring-red-400/30 bg-red-50 text-red-600",
   };
   const labels: Record<OrderStatus, string> = {
     draft: "Draft",
@@ -38,7 +38,7 @@ function statusBadge(status: OrderStatus) {
     cancelled: "Cancelled",
   };
   return (
-    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", cls[status])}>
+    <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", cls[status])}>
       {labels[status]}
     </span>
   );
@@ -58,15 +58,11 @@ export default async function OrdersPage({
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">Orders</h1>
-          {orders.length > 0 && (
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-              {orders.length}
-            </span>
-          )}
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Orders</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Track and manage customer orders</p>
         </div>
-        <Link href="/orders/new" className={buttonVariants()}>
+        <Link href="/orders/new" className={buttonVariants({ size: "sm" })}>
           New order
         </Link>
       </div>
@@ -100,19 +96,19 @@ export default async function OrdersPage({
         <div className="rounded-2xl border overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/50">
+            <thead className="bg-muted/30">
               <tr>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Order #</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
-                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Order #</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Customer</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Date</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</th>
+                <th className="py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Total</th>
                 <th className="py-3.5 px-4" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border/50">
               {orders.map((order) => (
-                <tr key={order.id} className="hover:bg-muted/20 transition-colors">
+                <tr key={order.id} className="hover:bg-muted/40 transition-colors">
                   <td className="py-4 px-4 font-mono text-sm font-medium">
                     {order.orderNumber}
                   </td>

@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Search, Package, ChevronRight } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { formatRupees } from "@/lib/money";
 
 type Product = {
@@ -71,26 +70,26 @@ export function ProductsClient({ products }: ProductsClientProps) {
         <div className="rounded-2xl border overflow-hidden shadow-sm">
           <table className="min-w-full">
             <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr className="border-b bg-muted/30">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Product
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
                   SKU
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Base unit
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Base price
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Status
                 </th>
                 <th className="px-3 py-3.5 w-8" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border/50">
               {filtered.map((p) => (
                 <tr
                   key={p.id}
@@ -111,13 +110,13 @@ export function ProductsClient({ products }: ProductsClientProps) {
                   </td>
                   <td className="px-5 py-4">
                     {p.status === "active" ? (
-                      <Badge className="bg-emerald-100 text-emerald-800 border-transparent hover:bg-emerald-100 font-semibold">
+                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700">
                         Active
-                      </Badge>
+                      </span>
                     ) : (
-                      <Badge variant="secondary" className="font-semibold">
+                      <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-gray-300/60 bg-gray-50 text-gray-500">
                         Inactive
-                      </Badge>
+                      </span>
                     )}
                   </td>
                   <td className="px-3 py-4">

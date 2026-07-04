@@ -19,12 +19,12 @@ const STATUS_TABS: { label: string; value: InvoiceStatus | "all" }[] = [
 
 function statusBadge(status: InvoiceStatus) {
   const cls: Record<InvoiceStatus, string> = {
-    draft: "bg-gray-100 text-gray-700",
-    sent: "bg-blue-100 text-blue-700",
-    partial: "bg-amber-100 text-amber-700",
-    paid: "bg-emerald-100 text-emerald-700",
-    overdue: "bg-red-100 text-red-700",
-    cancelled: "bg-gray-100 text-gray-500 line-through",
+    draft: "ring-1 ring-gray-300/60 bg-gray-50 text-gray-600",
+    sent: "ring-1 ring-blue-400/40 bg-blue-50 text-blue-700",
+    partial: "ring-1 ring-amber-400/40 bg-amber-50 text-amber-700",
+    paid: "ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700",
+    overdue: "ring-1 ring-red-400/30 bg-red-50 text-red-600",
+    cancelled: "ring-1 ring-gray-300/60 bg-gray-50 text-gray-400",
   };
   const labels: Record<InvoiceStatus, string> = {
     draft: "Draft",
@@ -35,7 +35,7 @@ function statusBadge(status: InvoiceStatus) {
     cancelled: "Cancelled",
   };
   return (
-    <span className={cn("rounded-full px-2.5 py-1 text-xs font-semibold", cls[status])}>
+    <span className={cn("rounded-full px-2.5 py-0.5 text-xs font-medium", cls[status])}>
       {labels[status]}
     </span>
   );
@@ -57,15 +57,11 @@ export default async function InvoicesPage({
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">Invoices</h1>
-          {invoices.length > 0 && (
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-              {invoices.length}
-            </span>
-          )}
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Invoices</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Billing and payment tracking</p>
         </div>
-        <Link href="/invoices/new" className={buttonVariants()}>
+        <Link href="/invoices/new" className={buttonVariants({ size: "sm" })}>
           New invoice
         </Link>
       </div>
@@ -105,24 +101,24 @@ export default async function InvoicesPage({
         <div className="rounded-2xl border overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/50">
+            <thead className="bg-muted/30">
               <tr>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Invoice #</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Issue Date</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Due Date</th>
-                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total</th>
-                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Paid</th>
-                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Outstanding</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Invoice #</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Customer</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Issue Date</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Due Date</th>
+                <th className="py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Total</th>
+                <th className="py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Paid</th>
+                <th className="py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Outstanding</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Status</th>
                 <th className="py-3.5 px-4" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border/50">
               {invoices.map((inv) => (
                 <tr
                   key={inv.id}
-                  className="hover:bg-muted/20 transition-colors"
+                  className="hover:bg-muted/40 transition-colors"
                 >
                   <td className="py-4 px-4 font-mono text-sm font-medium">
                     {inv.invoiceNumber}
