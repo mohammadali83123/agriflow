@@ -13,6 +13,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: "Products", href: "/products", iconName: "Tag" },
   { label: "Customers", href: "/customers", iconName: "Users" },
   { label: "Suppliers", href: "/suppliers", iconName: "Truck" },
+  { label: "Invoices", href: "/invoices", iconName: "FileText" },
   { label: "Payments", href: "/payments", iconName: "Banknote" },
   { label: "Production", href: "/production", iconName: "Factory" },
 ];
