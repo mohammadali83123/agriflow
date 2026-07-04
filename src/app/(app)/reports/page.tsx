@@ -144,24 +144,7 @@ export default async function ReportsPage({
 
   const monthOptions = buildMonthOptions();
   const currentMonthValue = monthOptions[0].value;
-
-  // When no month is specified, auto-select the most recent month that has data
-  let defaultMonth = currentMonthValue;
-  if (!month) {
-    const [latestInvoice] = await db
-      .select({ issueDate: schema.invoice.issueDate })
-      .from(schema.invoice)
-      .where(and(eq(schema.invoice.orgId, orgId), isNull(schema.invoice.deletedAt)))
-      .orderBy(sql`${schema.invoice.issueDate} DESC`)
-      .limit(1);
-    if (latestInvoice?.issueDate) {
-      const d = new Date(latestInvoice.issueDate as string);
-      const candidate = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
-      if (monthOptions.some((m) => m.value === candidate)) defaultMonth = candidate;
-    }
-  }
-
-  const selectedMonth = month && monthOptions.some((m) => m.value === month) ? month : defaultMonth;
+  const selectedMonth = month && monthOptions.some((m) => m.value === month) ? month : currentMonthValue;
   const range = monthRange(selectedMonth);
 
   // Fetch data for active tab
