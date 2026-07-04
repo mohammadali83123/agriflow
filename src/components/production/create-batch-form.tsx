@@ -138,6 +138,9 @@ export function CreateBatchForm({
                 Warehouse <span className="text-destructive">*</span>
               </Label>
               <Select
+                items={Object.fromEntries(
+                  warehouses.map((w) => [w.id, w.isDefault ? `${w.name} (default)` : w.name])
+                )}
                 defaultValue={defaultWarehouse?.id}
                 onValueChange={(val) => { if (val) setValue("warehouseId", val); }}
               >
@@ -203,6 +206,7 @@ export function CreateBatchForm({
           <div className="space-y-2">
             <Label className="text-sm font-medium">Allocation method</Label>
             <Select
+              items={{ value: "By value", weight: "By weight", manual: "Manual" }}
               defaultValue="value"
               onValueChange={(val) =>
                 setValue("allocationMethod", val as "value" | "weight" | "manual")

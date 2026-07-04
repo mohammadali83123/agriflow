@@ -145,7 +145,10 @@ function AddInputForm({
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="space-y-1">
           <Label className="text-xs">Product *</Label>
-          <Select<string> onValueChange={(val) => { if (val) handleProductChange(val); }}>
+          <Select<string>
+            items={Object.fromEntries(activeProducts.map((p) => [p.id, p.name]))}
+            onValueChange={(val) => { if (val) handleProductChange(val); }}
+          >
             <SelectTrigger className="h-9 text-sm">
               <SelectValue placeholder="Select product" />
             </SelectTrigger>
@@ -326,7 +329,10 @@ function AddOutputForm({
         {!isWaste && (
           <div className="space-y-1">
             <Label className="text-xs">Product *</Label>
-            <Select<string> onValueChange={(val) => setValue("productId", val ?? undefined)}>
+            <Select<string>
+              items={Object.fromEntries(activeProducts.map((p) => [p.id, p.name]))}
+              onValueChange={(val) => setValue("productId", val ?? undefined)}
+            >
               <SelectTrigger className="h-9 text-sm">
                 <SelectValue placeholder="Select product" />
               </SelectTrigger>
