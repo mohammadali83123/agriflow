@@ -8,13 +8,192 @@ import {
   Package2,
   ClipboardList,
   ArrowRight,
+  AlertTriangle,
+  Truck,
 } from "lucide-react";
 import Link from "next/link";
 import { requireOrg } from "@/lib/db/scoped";
 import { getUserOrganizations } from "@/lib/db/scoped";
 import { cn } from "@/lib/utils";
+import { db } from "@/lib/db";
+import { sql, eq, and, inArray, isNull } from "drizzle-orm";
+import * as schema from "@/lib/db/schema";
+import { formatRupees } from "@/lib/money";
 
 export const metadata = { title: "Dashboard" };
+
+// ─── Data fetching ────────────────────────────────────────────────────────────
+
+async function fetchOwnerKpis(orgId: string) {
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
+    .toISOString()
+    .slice(0, 10);
+  const today = now.toISOString().slice(0, 10);
+
+  // 1. Sales this month — SUM totalMinor where issueDate >= monthStart and status != cancelled
+  const [salesRow] = await db
+    .select({
+      total: sql<string>`COALESCE(SUM(${schema.invoice.totalMinor}), 0)`,
+      count: sql<string>`COUNT(*)`,
+    })
+    .from(schema.invoice)
+    .where(
+      and(
+        eq(schema.invoice.orgId, orgId),
+        isNull(schema.invoice.deletedAt),
+        sql`${schema.invoice.issueDate} >= ${monthStart}`,
+        sql`${schema.invoice.status} != 'cancelled'`
+      )
+    );
+
+  // 2. Outstanding — SUM (totalMinor - amountPaidMinor) for sent/partial/overdue
+  const [outstandingRow] = await db
+    .select({
+      total: sql<string>`COALESCE(SUM(${schema.invoice.totalMinor} - ${schema.invoice.amountPaidMinor}), 0)`,
+      count: sql<string>`COUNT(DISTINCT ${schema.invoice.customerId})`,
+    })
+    .from(schema.invoice)
+    .where(
+      and(
+        eq(schema.invoice.orgId, orgId),
+        isNull(schema.invoice.deletedAt),
+        inArray(schema.invoice.status, ["sent", "partial", "overdue"])
+      )
+    );
+
+  // 3. Inventory value — SUM(quantityDelta * unitCostMinor) over all transactions
+  const [inventoryRow] = await db
+    .select({
+      value: sql<string>`COALESCE(SUM(CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC) * CAST(${schema.inventoryTransaction.unitCostMinor} AS NUMERIC)), 0)`,
+    })
+    .from(schema.inventoryTransaction)
+    .where(eq(schema.inventoryTransaction.orgId, orgId));
+
+  // 4. Low stock items — product_ids where SUM(quantityDelta) < 100
+  const lowStockRows = await db
+    .select({
+      productId: schema.inventoryTransaction.productId,
+    })
+    .from(schema.inventoryTransaction)
+    .where(eq(schema.inventoryTransaction.orgId, orgId))
+    .groupBy(schema.inventoryTransaction.productId)
+    .having(
+      sql`SUM(CAST(${schema.inventoryTransaction.quantityDelta} AS NUMERIC)) < 100`
+    );
+
+  // 5. Pending orders — count with status IN ('confirmed','reserved','ready')
+  const [pendingOrdersRow] = await db
+    .select({
+      count: sql<string>`COUNT(*)`,
+    })
+    .from(schema.order)
+    .where(
+      and(
+        eq(schema.order.orgId, orgId),
+        isNull(schema.order.deletedAt),
+        inArray(schema.order.status, ["confirmed", "reserved", "ready"])
+      )
+    );
+
+  // 6. Today's dispatches
+  const [todayDispatchRow] = await db
+    .select({
+      count: sql<string>`COUNT(*)`,
+    })
+    .from(schema.dispatch)
+    .where(
+      and(
+        eq(schema.dispatch.orgId, orgId),
+        sql`${schema.dispatch.dispatchDate} = ${today}`
+      )
+    );
+
+  return {
+    salesThisMonth: BigInt(salesRow?.total ?? "0"),
+    salesCount: Number(salesRow?.count ?? "0"),
+    outstanding: BigInt(outstandingRow?.total ?? "0"),
+    outstandingCustomers: Number(outstandingRow?.count ?? "0"),
+    inventoryValue: BigInt(Math.round(Number(inventoryRow?.value ?? "0"))),
+    lowStockCount: lowStockRows.length,
+    pendingOrders: Number(pendingOrdersRow?.count ?? "0"),
+    todayDispatches: Number(todayDispatchRow?.count ?? "0"),
+  };
+}
+
+async function fetchTopCustomers(orgId: string) {
+  return db
+    .select({
+      customerId: schema.invoice.customerId,
+      name: schema.customer.name,
+      outstanding: sql<string>`SUM(${schema.invoice.totalMinor} - ${schema.invoice.amountPaidMinor})`,
+    })
+    .from(schema.invoice)
+    .innerJoin(
+      schema.customer,
+      eq(schema.invoice.customerId, schema.customer.id)
+    )
+    .where(
+      and(
+        eq(schema.invoice.orgId, orgId),
+        isNull(schema.invoice.deletedAt),
+        inArray(schema.invoice.status, ["sent", "partial", "overdue"])
+      )
+    )
+    .groupBy(schema.invoice.customerId, schema.customer.name)
+    .orderBy(
+      sql`SUM(${schema.invoice.totalMinor} - ${schema.invoice.amountPaidMinor}) DESC`
+    )
+    .limit(5);
+}
+
+async function fetchRecentOrders(orgId: string) {
+  const rows = await db
+    .select({
+      id: schema.order.id,
+      orderNumber: schema.order.orderNumber,
+      status: schema.order.status,
+      createdAt: schema.order.createdAt,
+      customerName: schema.customer.name,
+    })
+    .from(schema.order)
+    .innerJoin(
+      schema.customer,
+      eq(schema.order.customerId, schema.customer.id)
+    )
+    .where(
+      and(
+        eq(schema.order.orgId, orgId),
+        isNull(schema.order.deletedAt)
+      )
+    )
+    .orderBy(sql`${schema.order.createdAt} DESC`)
+    .limit(5);
+
+  // Fetch line totals for each order
+  const orderIds = rows.map((r) => r.id);
+  const lineTotals: Record<string, bigint> = {};
+  if (orderIds.length > 0) {
+    const totalsRows = await db
+      .select({
+        orderId: schema.orderLine.orderId,
+        total: sql<string>`SUM(${schema.orderLine.lineTotalMinor})`,
+      })
+      .from(schema.orderLine)
+      .where(inArray(schema.orderLine.orderId, orderIds))
+      .groupBy(schema.orderLine.orderId);
+    for (const t of totalsRows) {
+      lineTotals[t.orderId] = BigInt(t.total ?? "0");
+    }
+  }
+
+  return rows.map((r) => ({
+    ...r,
+    total: lineTotals[r.id] ?? 0n,
+  }));
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default async function DashboardPage() {
   const { session, orgId, role } = await requireOrg();
@@ -36,7 +215,7 @@ export default async function DashboardPage() {
       </div>
 
       {role === "owner" ? (
-        <OwnerDashboard />
+        <OwnerDashboard orgId={orgId} />
       ) : (
         <OperatorDashboard />
       )}
@@ -44,12 +223,23 @@ export default async function DashboardPage() {
   );
 }
 
-function OwnerDashboard() {
+// ─── Owner dashboard ──────────────────────────────────────────────────────────
+
+async function OwnerDashboard({ orgId }: { orgId: string }) {
+  const [kpiData, topCustomers, recentOrders] = await Promise.all([
+    fetchOwnerKpis(orgId),
+    fetchTopCustomers(orgId),
+    fetchRecentOrders(orgId),
+  ]);
+
   const kpis = [
     {
-      label: "Sales today",
-      value: "Rs —",
-      sub: "No orders yet",
+      label: "Sales this month",
+      value: formatRupees(kpiData.salesThisMonth),
+      sub:
+        kpiData.salesCount === 0
+          ? "No invoices yet"
+          : `${kpiData.salesCount} invoice${kpiData.salesCount !== 1 ? "s" : ""}`,
       icon: TrendingUp,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
@@ -57,8 +247,11 @@ function OwnerDashboard() {
     },
     {
       label: "Outstanding",
-      value: "Rs —",
-      sub: "0 customers",
+      value: formatRupees(kpiData.outstanding),
+      sub:
+        kpiData.outstandingCustomers === 0
+          ? "No overdue invoices"
+          : `${kpiData.outstandingCustomers} customer${kpiData.outstandingCustomers !== 1 ? "s" : ""}`,
       icon: Banknote,
       color: "text-amber-600",
       bg: "bg-amber-50",
@@ -66,23 +259,51 @@ function OwnerDashboard() {
     },
     {
       label: "Inventory value",
-      value: "Rs —",
-      sub: "0 products",
+      value: formatRupees(kpiData.inventoryValue),
+      sub:
+        kpiData.lowStockCount === 0
+          ? "All products stocked"
+          : `${kpiData.lowStockCount} low-stock product${kpiData.lowStockCount !== 1 ? "s" : ""}`,
       icon: Package,
       color: "text-blue-600",
       bg: "bg-blue-50",
       border: "border-l-blue-500",
     },
     {
-      label: "Pending dispatch",
-      value: "—",
-      sub: "0 orders",
+      label: "Pending orders",
+      value: String(kpiData.pendingOrders),
+      sub:
+        kpiData.todayDispatches === 0
+          ? "No dispatches today"
+          : `${kpiData.todayDispatches} dispatch${kpiData.todayDispatches !== 1 ? "es" : ""} today`,
       icon: ShoppingBag,
       color: "text-orange-600",
       bg: "bg-orange-50",
       border: "border-l-orange-500",
     },
   ];
+
+  const orderStatusLabels: Record<string, string> = {
+    draft: "Draft",
+    confirmed: "Confirmed",
+    reserved: "Reserved",
+    ready: "Ready",
+    dispatched: "Dispatched",
+    delivered: "Delivered",
+    completed: "Completed",
+    cancelled: "Cancelled",
+  };
+
+  const orderStatusColors: Record<string, string> = {
+    draft: "bg-gray-100 text-gray-700",
+    confirmed: "bg-blue-100 text-blue-700",
+    reserved: "bg-violet-100 text-violet-700",
+    ready: "bg-amber-100 text-amber-700",
+    dispatched: "bg-orange-100 text-orange-700",
+    delivered: "bg-emerald-100 text-emerald-700",
+    completed: "bg-emerald-100 text-emerald-700",
+    cancelled: "bg-gray-100 text-gray-500",
+  };
 
   return (
     <div className="space-y-6">
@@ -119,22 +340,102 @@ function OwnerDashboard() {
         })}
       </div>
 
-      {/* Empty state — recent activity */}
-      <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
-        <div className="px-5 py-4 border-b">
-          <h2 className="text-sm font-semibold">Recent activity</h2>
-        </div>
-        <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-          <div className="flex size-12 items-center justify-center rounded-full bg-muted mb-4">
-            <ClipboardList className="size-5 text-muted-foreground" />
+      {/* Two column: Recent orders + Top customers */}
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+        {/* Recent orders */}
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b">
+            <h2 className="text-sm font-semibold">Recent orders</h2>
+            <Link
+              href="/orders"
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+            >
+              View all <ArrowRight className="size-3" />
+            </Link>
           </div>
-          <p className="text-sm font-medium text-foreground mb-1">
-            No activity yet
-          </p>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            Orders, payments, and dispatches will appear here once you start
-            operations.
-          </p>
+          {recentOrders.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+              <div className="flex size-10 items-center justify-center rounded-full bg-muted mb-3">
+                <ClipboardList className="size-4 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">No orders yet</p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {recentOrders.map((ord) => (
+                <Link
+                  key={ord.id}
+                  href={`/orders/${ord.id}`}
+                  className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors group"
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium font-mono">
+                      {ord.orderNumber}
+                    </p>
+                    <p className="text-xs text-muted-foreground truncate">
+                      {ord.customerName}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <span
+                      className={cn(
+                        "rounded-full px-2 py-0.5 text-xs font-medium",
+                        orderStatusColors[ord.status] ?? "bg-gray-100 text-gray-700"
+                      )}
+                    >
+                      {orderStatusLabels[ord.status] ?? ord.status}
+                    </span>
+                    <span className="text-xs font-mono tabular-nums font-medium">
+                      {formatRupees(ord.total)}
+                    </span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Top customers by outstanding */}
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b">
+            <h2 className="text-sm font-semibold">Top customers by outstanding</h2>
+            <Link
+              href="/customers"
+              className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
+            >
+              View all <ArrowRight className="size-3" />
+            </Link>
+          </div>
+          {topCustomers.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
+              <div className="flex size-10 items-center justify-center rounded-full bg-muted mb-3">
+                <AlertTriangle className="size-4 text-muted-foreground" />
+              </div>
+              <p className="text-sm text-muted-foreground">
+                No outstanding balances
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y">
+              {topCustomers.map((c, i) => (
+                <Link
+                  key={c.customerId}
+                  href={`/customers/${c.customerId}`}
+                  className="flex items-center justify-between px-5 py-3.5 hover:bg-muted/30 transition-colors group"
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="flex size-6 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
+                      {i + 1}
+                    </span>
+                    <p className="text-sm font-medium">{c.name}</p>
+                  </div>
+                  <span className="text-sm font-mono tabular-nums font-semibold text-red-600">
+                    {formatRupees(BigInt(Math.round(Number(c.outstanding))))}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -161,6 +462,8 @@ function OwnerDashboard() {
     </div>
   );
 }
+
+// ─── Operator dashboard ───────────────────────────────────────────────────────
 
 function OperatorDashboard() {
   const actions = [
@@ -191,7 +494,7 @@ function OperatorDashboard() {
     {
       label: "Dispatch Order",
       desc: "Mark goods as loaded and sent",
-      icon: ShoppingBag,
+      icon: Truck,
       href: "/orders?status=ready",
       color: "text-orange-600",
       bg: "bg-orange-50",

@@ -16,6 +16,7 @@ const ALL_NAV_ITEMS: NavItem[] = [
   { label: "Invoices", href: "/invoices", iconName: "FileText" },
   { label: "Payments", href: "/payments", iconName: "Banknote" },
   { label: "Production", href: "/production", iconName: "Factory" },
+  { label: "Reports", href: "/reports", iconName: "BarChart3" },
 ];
 
 const OPERATOR_HREFS = new Set(["/dashboard", "/inventory", "/orders", "/invoices", "/payments"]);

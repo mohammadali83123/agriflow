@@ -13,6 +13,7 @@ import {
   Factory,
   Settings,
   FileText,
+  BarChart3,
   type LucideIcon,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -29,6 +30,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   Factory,
   Settings,
   FileText,
+  BarChart3,
 };
 
 export function SidebarNav({ items }: { items: NavItem[] }) {
