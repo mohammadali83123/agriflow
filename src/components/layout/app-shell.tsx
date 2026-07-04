@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
-import { getUserOrganizations, requireOrg } from "@/lib/db/scoped";
+import { redirect } from "next/navigation";
+import { getUserOrganizations, requireAuth, requireOrg } from "@/lib/db/scoped";
 import { OrganizationSwitcher } from "@/components/auth/organization-switcher";
 import { SignOutButton } from "@/components/auth/sign-out-button";
 import { Sidebar } from "./sidebar";
@@ -7,6 +8,14 @@ import { MobileNav } from "./mobile-nav";
 import { getNavItems, SETTINGS_ITEM } from "./nav-config";
 
 export async function AppShell({ children }: { children: ReactNode }) {
+  // Platform admins go to /admin — they have no org and would hit requireOrg() here
+  const earlySession = await requireAuth();
+  const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
+  if (adminEmails.includes(earlySession.user.email)) redirect("/admin");
+
   const { session, orgId, role } = await requireOrg();
   const orgs = await getUserOrganizations(session.user.id);
   const activeOrg = orgs.find((o) => o.id === orgId);

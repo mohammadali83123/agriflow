@@ -10,23 +10,14 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { requireAuth, requireOrg } from "@/lib/db/scoped";
+import { requireOrg } from "@/lib/db/scoped";
 import { getUserOrganizations } from "@/lib/db/scoped";
 import { cn } from "@/lib/utils";
 
 export const metadata = { title: "Dashboard" };
 
 export default async function DashboardPage() {
-  // Platform admins land on /admin, not here
-  const session = await requireAuth();
-  const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS ?? "")
-    .split(",")
-    .map((e) => e.trim())
-    .filter(Boolean);
-  if (adminEmails.includes(session.user.email)) redirect("/admin");
-
-  const { orgId, role } = await requireOrg();
+  const { session, orgId, role } = await requireOrg();
   const orgs = await getUserOrganizations(session.user.id);
   const activeOrg = orgs.find((o) => o.id === orgId);
 
