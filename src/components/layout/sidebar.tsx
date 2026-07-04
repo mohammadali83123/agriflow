@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Wheat } from "lucide-react";
+import { Wheat, Search } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { SidebarNav } from "./sidebar-nav";
 import type { NavItem } from "./nav-config";
@@ -32,6 +32,21 @@ export function Sidebar({
       {/* Business switcher */}
       <div className="px-3 py-2.5 border-b border-sidebar-border shrink-0">
         {orgSwitcher}
+      </div>
+
+      {/* Search */}
+      <div className="px-3 py-2 border-b border-sidebar-border shrink-0">
+        <form action="/search" method="GET">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 size-3.5 text-muted-foreground pointer-events-none" />
+            <input
+              type="search"
+              name="q"
+              placeholder="Search..."
+              className="w-full rounded-md border bg-background pl-8 pr-3 py-1.5 text-sm placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+            />
+          </div>
+        </form>
       </div>
 
       {/* Main nav */}
