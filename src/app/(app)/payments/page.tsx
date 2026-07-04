@@ -45,19 +45,18 @@ export default async function PaymentsPage() {
         </div>
       ) : (
         <div className="rounded-2xl border overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
-                {["Payment #", "Customer", "Date", "Method", "Amount", "Allocated", "Unallocated", ""].map(
-                  (h) => (
-                    <th
-                      key={h}
-                      className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                    >
-                      {h}
-                    </th>
-                  )
-                )}
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Payment #</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Method</th>
+                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Amount</th>
+                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Allocated</th>
+                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Unallocated</th>
+                <th className="py-3.5 px-4" />
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -73,13 +72,13 @@ export default async function PaymentsPage() {
                   <td className="py-4 px-4 text-sm text-muted-foreground">
                     {METHOD_LABELS[pmt.method] ?? pmt.method}
                   </td>
-                  <td className="py-4 px-4 text-sm font-medium">
+                  <td className="py-4 px-4 text-sm font-mono tabular-nums text-right font-medium">
                     {formatRupees(pmt.amountMinor)}
                   </td>
-                  <td className="py-4 px-4 text-sm text-emerald-700">
+                  <td className="py-4 px-4 text-sm font-mono tabular-nums text-right text-emerald-700">
                     {formatRupees(pmt.allocatedMinor)}
                   </td>
-                  <td className="py-4 px-4 text-sm">
+                  <td className="py-4 px-4 text-sm font-mono tabular-nums text-right">
                     {pmt.unallocatedMinor > 0 ? (
                       <span className="text-amber-700">
                         {formatRupees(pmt.unallocatedMinor)}
@@ -100,6 +99,7 @@ export default async function PaymentsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

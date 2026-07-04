@@ -68,7 +68,8 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
         </div>
       ) : (
         <div className="rounded-2xl border overflow-hidden shadow-sm">
-          <table className="min-w-full">
+          <div className="overflow-x-auto">
+          <table className="min-w-full w-full">
             <thead>
               <tr className="border-b bg-muted/40">
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -80,7 +81,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
                   City
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">
+                <th className="px-5 py-3.5 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">
                   Credit limit
                 </th>
                 <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
@@ -110,7 +111,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
                   <td className="px-5 py-4 text-sm text-muted-foreground hidden sm:table-cell">
                     {c.city ?? "—"}
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground hidden md:table-cell">
+                  <td className="px-5 py-4 text-sm font-mono tabular-nums text-right text-muted-foreground hidden md:table-cell">
                     {formatRupees(c.creditLimitMinor)}
                   </td>
                   <td className="px-5 py-4">
@@ -132,6 +133,7 @@ export function CustomersTable({ customers }: { customers: Customer[] }) {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

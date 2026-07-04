@@ -98,17 +98,16 @@ export default async function OrdersPage({
         </div>
       ) : (
         <div className="rounded-2xl border overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
           <table className="w-full">
             <thead className="bg-muted/50">
               <tr>
-                {["Order #", "Customer", "Date", "Status", "Total", ""].map((h) => (
-                  <th
-                    key={h}
-                    className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground"
-                  >
-                    {h}
-                  </th>
-                ))}
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Order #</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
+                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Status</th>
+                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Total</th>
+                <th className="py-3.5 px-4" />
               </tr>
             </thead>
             <tbody className="divide-y">
@@ -122,7 +121,7 @@ export default async function OrdersPage({
                     {new Date(order.createdAt).toLocaleDateString("en-PK")}
                   </td>
                   <td className="py-4 px-4">{statusBadge(order.status)}</td>
-                  <td className="py-4 px-4 text-sm font-medium">
+                  <td className="py-4 px-4 text-sm font-mono tabular-nums text-right font-medium">
                     {formatRupees(order.totalMinor)}
                   </td>
                   <td className="py-4 px-4 text-right">
@@ -137,6 +136,7 @@ export default async function OrdersPage({
               ))}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>

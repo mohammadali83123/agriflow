@@ -72,6 +72,7 @@ export function SuppliersTable({ suppliers }: { suppliers: Supplier[] }) {
         </div>
       ) : (
         <div className="rounded-2xl border overflow-hidden shadow-sm">
+          <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
               <tr className="border-b bg-muted/40">
@@ -146,6 +147,7 @@ export function SuppliersTable({ suppliers }: { suppliers: Supplier[] }) {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
     </div>
