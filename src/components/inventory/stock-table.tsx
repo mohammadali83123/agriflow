@@ -45,30 +45,30 @@ export function StockTable({ stockLevels }: StockTableProps) {
     <div className="rounded-2xl border overflow-hidden shadow-sm">
       <div className="overflow-x-auto">
       <table className="w-full text-sm">
-        <thead className="bg-muted/40">
+        <thead className="bg-muted/30">
           <tr>
-            <th className="text-left px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <th className="text-left px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Product
             </th>
-            <th className="text-left px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <th className="text-left px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Warehouse
             </th>
-            <th className="text-right px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+            <th className="text-right px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground">
               Stock
             </th>
-            <th className="text-right px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
+            <th className="text-right px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
               Avg Cost / unit
             </th>
-            <th className="text-right px-4 py-3.5 text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">
+            <th className="text-right px-4 py-3.5 text-xs font-medium uppercase tracking-wide text-muted-foreground hidden md:table-cell">
               Value
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y">
+        <tbody className="divide-y divide-border/50">
           {stockLevels.map((row) => (
             <tr
               key={`${row.productId}-${row.warehouseId}`}
-              className="hover:bg-muted/30 transition-colors"
+              className="hover:bg-muted/40 transition-colors"
             >
               <td className="px-4 py-4 font-medium">{row.productName}</td>
               <td className="px-4 py-4 text-muted-foreground">

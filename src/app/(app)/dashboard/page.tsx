@@ -206,10 +206,10 @@ export default async function DashboardPage() {
     <div className="p-4 md:p-6 max-w-6xl mx-auto space-y-8">
       {/* Greeting */}
       <div className="space-y-0.5">
-        <h1 className="text-2xl font-bold tracking-tight">
+        <h1 className="text-xl font-semibold tracking-tight">
           {activeOrg?.name ?? "Dashboard"}
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm text-muted-foreground">
           Good to see you, {firstName}
         </p>
       </div>
@@ -243,7 +243,6 @@ async function OwnerDashboard({ orgId }: { orgId: string }) {
       icon: TrendingUp,
       color: "text-emerald-600",
       bg: "bg-emerald-50",
-      border: "border-l-emerald-500",
     },
     {
       label: "Outstanding",
@@ -255,7 +254,6 @@ async function OwnerDashboard({ orgId }: { orgId: string }) {
       icon: Banknote,
       color: "text-amber-600",
       bg: "bg-amber-50",
-      border: "border-l-amber-500",
     },
     {
       label: "Inventory value",
@@ -267,7 +265,6 @@ async function OwnerDashboard({ orgId }: { orgId: string }) {
       icon: Package,
       color: "text-blue-600",
       bg: "bg-blue-50",
-      border: "border-l-blue-500",
     },
     {
       label: "Pending orders",
@@ -279,7 +276,6 @@ async function OwnerDashboard({ orgId }: { orgId: string }) {
       icon: ShoppingBag,
       color: "text-orange-600",
       bg: "bg-orange-50",
-      border: "border-l-orange-500",
     },
   ];
 
@@ -295,14 +291,14 @@ async function OwnerDashboard({ orgId }: { orgId: string }) {
   };
 
   const orderStatusColors: Record<string, string> = {
-    draft: "bg-gray-100 text-gray-700",
-    confirmed: "bg-blue-100 text-blue-700",
-    reserved: "bg-violet-100 text-violet-700",
-    ready: "bg-amber-100 text-amber-700",
-    dispatched: "bg-orange-100 text-orange-700",
-    delivered: "bg-emerald-100 text-emerald-700",
-    completed: "bg-emerald-100 text-emerald-700",
-    cancelled: "bg-gray-100 text-gray-500",
+    draft: "ring-1 ring-gray-300/60 bg-gray-50 text-gray-600",
+    confirmed: "ring-1 ring-blue-400/40 bg-blue-50 text-blue-700",
+    reserved: "ring-1 ring-violet-400/40 bg-violet-50 text-violet-700",
+    ready: "ring-1 ring-amber-400/40 bg-amber-50 text-amber-700",
+    dispatched: "ring-1 ring-orange-400/40 bg-orange-50 text-orange-700",
+    delivered: "ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700",
+    completed: "ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700",
+    cancelled: "ring-1 ring-gray-300/60 bg-gray-50 text-gray-400",
   };
 
   return (
@@ -314,13 +310,10 @@ async function OwnerDashboard({ orgId }: { orgId: string }) {
           return (
             <div
               key={kpi.label}
-              className={cn(
-                "rounded-xl border bg-card p-4 border-l-4 shadow-sm",
-                kpi.border
-              )}
+              className="rounded-xl border bg-card p-5 shadow-sm"
             >
               <div className="flex items-center justify-between mb-3">
-                <p className="text-xs font-medium text-muted-foreground">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                   {kpi.label}
                 </p>
                 <span
@@ -333,8 +326,8 @@ async function OwnerDashboard({ orgId }: { orgId: string }) {
                   <Icon className="size-3.5" />
                 </span>
               </div>
-              <p className="text-xl font-bold tracking-tight">{kpi.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{kpi.sub}</p>
+              <p className="text-2xl font-bold tracking-tight">{kpi.value}</p>
+              <p className="text-xs text-muted-foreground mt-1">{kpi.sub}</p>
             </div>
           );
         })}

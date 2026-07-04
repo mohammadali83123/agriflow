@@ -47,10 +47,10 @@ export function SidebarNav({ items }: { items: NavItem[] }) {
             key={item.href}
             href={item.href}
             className={cn(
-              "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+              "flex items-center gap-2.5 rounded-md px-3 py-2 text-sm transition-colors w-full",
               active
-                ? "bg-primary/10 text-primary border-l-2 border-primary"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground"
+                ? "bg-primary/8 text-primary font-medium border-l-[2px] border-primary pl-[14px]"
+                : "text-muted-foreground hover:bg-accent hover:text-foreground font-normal"
             )}
           >
             <Icon className={cn("size-4 shrink-0", active && "text-primary")} />

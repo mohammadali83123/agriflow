@@ -17,9 +17,9 @@ type Supplier = {
 };
 
 const TYPE_CONFIG: Record<string, { label: string; className: string }> = {
-  farmer: { label: "Farmer", className: "bg-green-100 text-green-800" },
-  supplier: { label: "Supplier", className: "bg-blue-100 text-blue-800" },
-  trader: { label: "Trader", className: "bg-orange-100 text-orange-800" },
+  farmer: { label: "Farmer", className: "ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700" },
+  supplier: { label: "Supplier", className: "ring-1 ring-blue-400/40 bg-blue-50 text-blue-700" },
+  trader: { label: "Trader", className: "ring-1 ring-orange-400/40 bg-orange-50 text-orange-700" },
 };
 
 export function SuppliersTable({ suppliers }: { suppliers: Supplier[] }) {
@@ -75,26 +75,26 @@ export function SuppliersTable({ suppliers }: { suppliers: Supplier[] }) {
           <div className="overflow-x-auto">
           <table className="min-w-full">
             <thead>
-              <tr className="border-b bg-muted/40">
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+              <tr className="border-b bg-muted/30">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Supplier
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Type
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground hidden sm:table-cell">
                   Phone
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground hidden md:table-cell">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground hidden md:table-cell">
                   Payment terms
                 </th>
-                <th className="px-5 py-3.5 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                <th className="px-5 py-3.5 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
                   Status
                 </th>
                 <th className="px-3 py-3.5 w-8" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border/50">
               {filtered.map((s) => {
                 const typeConfig = TYPE_CONFIG[s.type] ?? TYPE_CONFIG.supplier;
                 return (
@@ -114,7 +114,7 @@ export function SuppliersTable({ suppliers }: { suppliers: Supplier[] }) {
                     <td className="px-5 py-4">
                       <span
                         className={cn(
-                          "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
                           typeConfig.className
                         )}
                       >
@@ -130,10 +130,10 @@ export function SuppliersTable({ suppliers }: { suppliers: Supplier[] }) {
                     <td className="px-5 py-4">
                       <span
                         className={cn(
-                          "inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold",
+                          "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium",
                           s.status === "active"
-                            ? "bg-emerald-100 text-emerald-800"
-                            : "bg-gray-100 text-gray-600"
+                            ? "ring-1 ring-emerald-500/30 bg-emerald-50 text-emerald-700"
+                            : "ring-1 ring-gray-300/60 bg-gray-50 text-gray-500"
                         )}
                       >
                         {s.status === "active" ? "Active" : "Inactive"}

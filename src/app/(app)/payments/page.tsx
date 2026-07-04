@@ -20,15 +20,11 @@ export default async function PaymentsPage() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center gap-3">
-          <h1 className="text-2xl font-bold tracking-tight">Payments</h1>
-          {payments.length > 0 && (
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-muted-foreground">
-              {payments.length}
-            </span>
-          )}
+        <div>
+          <h1 className="text-xl font-semibold tracking-tight">Payments</h1>
+          <p className="text-sm text-muted-foreground mt-0.5">Customer payment records and allocations</p>
         </div>
-        <Link href="/payments/new" className={buttonVariants()}>
+        <Link href="/payments/new" className={buttonVariants({ size: "sm" })}>
           Record payment
         </Link>
       </div>
@@ -47,21 +43,21 @@ export default async function PaymentsPage() {
         <div className="rounded-2xl border overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-muted/50">
+            <thead className="bg-muted/30">
               <tr>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Payment #</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Customer</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
-                <th className="py-3.5 px-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Method</th>
-                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Amount</th>
-                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Allocated</th>
-                <th className="py-3.5 px-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Unallocated</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Payment #</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Customer</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Date</th>
+                <th className="py-3.5 px-4 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">Method</th>
+                <th className="py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Amount</th>
+                <th className="py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Allocated</th>
+                <th className="py-3.5 px-4 text-right text-xs font-medium uppercase tracking-wide text-muted-foreground">Unallocated</th>
                 <th className="py-3.5 px-4" />
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-border/50">
               {payments.map((pmt) => (
-                <tr key={pmt.id} className="hover:bg-muted/20 transition-colors">
+                <tr key={pmt.id} className="hover:bg-muted/40 transition-colors">
                   <td className="py-4 px-4 font-mono text-sm font-medium">
                     {pmt.paymentNumber}
                   </td>
