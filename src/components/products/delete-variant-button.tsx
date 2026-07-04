@@ -1,33 +1,60 @@
 "use client";
 
-import { useTransition } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { deleteVariant } from "@/server/products/actions";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
-interface DeleteVariantButtonProps {
-  id: string;
-  productId: string;
-}
-
-export function DeleteVariantButton({ id, productId: _productId }: DeleteVariantButtonProps) {
+export function DeleteVariantButton({ id }: { id: string; productId: string }) {
   const router = useRouter();
-  const [isPending, startTransition] = useTransition();
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  const handleDelete = () => {
-    if (!confirm("Remove this variant?")) return;
-    startTransition(async () => {
+  async function handleDelete() {
+    setLoading(true);
+    try {
       await deleteVariant(id);
+      setOpen(false);
       router.refresh();
-    });
-  };
+    } catch {
+      setLoading(false);
+    }
+  }
 
   return (
-    <button
-      onClick={handleDelete}
-      disabled={isPending}
-      className="text-sm text-destructive hover:underline underline-offset-4 disabled:opacity-50"
-    >
-      {isPending ? "Removing..." : "Remove"}
-    </button>
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger
+        render={
+          <button className="text-sm text-destructive hover:underline underline-offset-4">
+            Remove
+          </button>
+        }
+      />
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Remove variant?</DialogTitle>
+          <DialogDescription>
+            This will soft-delete the variant. Existing stock and orders referencing it are unaffected.
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>
+            Cancel
+          </Button>
+          <Button variant="destructive" onClick={handleDelete} disabled={loading}>
+            {loading ? "Removing…" : "Remove"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
