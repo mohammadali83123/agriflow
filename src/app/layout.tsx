@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import NextTopLoader from "nextjs-toploader";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -38,6 +39,12 @@ export default function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+          <NextTopLoader
+            color="oklch(0.551 0.177 149.4)"
+            shadow="0 0 10px oklch(0.551 0.177 149.4 / 0.4)"
+            height={3}
+            showSpinner={false}
+          />
           {children}
           <Analytics />
         </body>
