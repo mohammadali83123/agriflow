@@ -1,6 +1,7 @@
 import Link from "next/link";
-import { Wheat, Building2, Users, ArrowLeft } from "lucide-react";
+import { Wheat, Building2, Users } from "lucide-react";
 import { requirePlatformAdmin } from "@/lib/db/scoped";
+import { AdminSignOutButton } from "./sign-out-button";
 
 export const metadata = { title: "Platform Admin — AgriFlow" };
 
@@ -45,13 +46,7 @@ export default async function AdminLayout({
         </nav>
 
         <div className="ml-auto">
-          <Link
-            href="/dashboard"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-          >
-            <ArrowLeft className="size-4" />
-            Back to app
-          </Link>
+          <AdminSignOutButton />
         </div>
       </header>
 
