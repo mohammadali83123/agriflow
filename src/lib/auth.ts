@@ -43,15 +43,9 @@ export const auth = betterAuth({
   },
   plugins: [
     organization({
-      // Only platform admins (listed in PLATFORM_ADMIN_EMAILS) can create orgs.
-      // Clients are onboarded by the platform admin via /admin — not self-served.
-      allowUserToCreateOrganization: async (user) => {
-        const adminEmails = (process.env.PLATFORM_ADMIN_EMAILS ?? "")
-          .split(",")
-          .map((e) => e.trim())
-          .filter(Boolean);
-        return adminEmails.includes(user.email);
-      },
+      // Any authenticated user can create orgs freely.
+      // Account creation is invite-only (controlled at sign-up level).
+      allowUserToCreateOrganization: true,
     }),
   ],
 });
