@@ -246,12 +246,10 @@ export async function createOrgAndInviteOwner(
 
   const { ownerEmail } = parsed.data;
 
-  // Auto-generate a placeholder org name from the email domain.
-  // The client will rename it themselves in Settings after signing up.
-  const emailDomain = ownerEmail.split("@")[1]?.split(".")[0] ?? "business";
+  // Placeholder org — the client renames it in Settings after signing up.
   const suffix = Date.now().toString(36).slice(-4);
-  const placeholderName = emailDomain.charAt(0).toUpperCase() + emailDomain.slice(1);
-  const slug = `${emailDomain}-${suffix}`;
+  const placeholderName = "New Business";
+  const slug = `new-business-${suffix}`;
 
   const h = await headers();
 
