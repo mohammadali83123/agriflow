@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { signUp } from "@/lib/auth-client";
+import { signIn } from "@/lib/auth-client";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -16,11 +16,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function SignUpForm() {
+export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackURL = searchParams.get("callbackURL") ?? "/onboarding";
-  const [name, setName] = useState("");
+  const callbackURL = searchParams.get("callbackURL") ?? "/dashboard";
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -30,14 +30,13 @@ export function SignUpForm() {
     e.preventDefault();
     setError("");
     setPending(true);
-    const { error: err } = await signUp.email({
-      name,
+    const { error: err } = await signIn.email({
       email,
       password,
       callbackURL,
     });
     if (err) {
-      setError(err.message ?? "Could not create account. Try again.");
+      setError(err.message ?? "Invalid email or password");
       setPending(false);
     } else {
       router.push(callbackURL);
@@ -47,10 +46,8 @@ export function SignUpForm() {
   return (
     <Card className="shadow-sm border-border/60">
       <CardHeader className="space-y-1 pb-4">
-        <CardTitle className="text-2xl font-bold">Create account</CardTitle>
-        <CardDescription>
-          Start managing your agricultural business
-        </CardDescription>
+        <CardTitle className="text-2xl font-bold">Welcome back</CardTitle>
+        <CardDescription>Sign in to your AgriFlow account</CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
@@ -59,18 +56,6 @@ export function SignUpForm() {
               <p className="text-sm text-destructive">{error}</p>
             </div>
           )}
-          <div className="space-y-1.5">
-            <Label htmlFor="name">Full name</Label>
-            <Input
-              id="name"
-              type="text"
-              placeholder="Ali Ahmad"
-              autoComplete="name"
-              required
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
           <div className="space-y-1.5">
             <Label htmlFor="email">Email</Label>
             <Input
@@ -88,10 +73,8 @@ export function SignUpForm() {
             <Input
               id="password"
               type="password"
-              placeholder="At least 8 characters"
-              autoComplete="new-password"
+              autoComplete="current-password"
               required
-              minLength={8}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
@@ -99,15 +82,15 @@ export function SignUpForm() {
         </CardContent>
         <CardFooter className="flex flex-col gap-4 pt-2">
           <Button type="submit" className="w-full" disabled={pending}>
-            {pending ? "Creating account…" : "Create account"}
+            {pending ? "Signing in…" : "Sign in"}
           </Button>
           <p className="text-sm text-muted-foreground text-center">
-            Already have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link
-              href="/sign-in"
+              href="/sign-up"
               className="font-medium text-primary hover:underline underline-offset-4"
             >
-              Sign in
+              Create one
             </Link>
           </p>
         </CardFooter>

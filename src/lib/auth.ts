@@ -4,6 +4,7 @@ import { organization } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
+import { sendInvitationEmail, sendVerificationEmail } from "@/lib/email";
 
 export const auth = betterAuth({
   baseURL: process.env.BETTER_AUTH_URL!,
@@ -15,6 +16,13 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     autoSignIn: true,
+    sendVerificationEmail: async ({ user, url }: { user: { email: string; name: string }; url: string; token: string }) => {
+      await sendVerificationEmail({
+        toEmail: user.email,
+        userName: user.name,
+        url,
+      });
+    },
   },
   databaseHooks: {
     session: {
@@ -43,9 +51,15 @@ export const auth = betterAuth({
   },
   plugins: [
     organization({
-      // Any authenticated user can create orgs freely.
-      // Account creation is invite-only (controlled at sign-up level).
       allowUserToCreateOrganization: true,
+      sendInvitationEmail: async (data) => {
+        await sendInvitationEmail({
+          toEmail: data.invitation.email,
+          inviterName: data.inviter.user.name,
+          orgName: data.organization.name,
+          invitationId: data.invitation.id,
+        });
+      },
     }),
   ],
 });

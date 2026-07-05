@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import Link from "next/link";
 import { Phone, Mail, MessageCircle } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
@@ -20,7 +21,7 @@ const ALLOW_PUBLIC_SIGNUP = process.env.ALLOW_PUBLIC_SIGNUP === "true";
 
 export default function SignUpPage() {
   if (ALLOW_PUBLIC_SIGNUP) {
-    return <SignUpForm />;
+    return <Suspense><SignUpForm /></Suspense>;
   }
 
   return (
