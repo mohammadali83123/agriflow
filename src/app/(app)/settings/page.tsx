@@ -8,6 +8,7 @@ import { can } from "@/lib/rbac";
 import { cn } from "@/lib/utils";
 import * as schema from "@/lib/db/schema";
 import { OrgForm } from "@/components/settings/org-form";
+import { ProfileForm } from "@/components/settings/profile-form";
 import { MembersTable, type MemberRow } from "@/components/settings/members-table";
 import { InviteForm } from "@/components/settings/invite-form";
 import {
@@ -15,13 +16,14 @@ import {
   type InvitationRow,
 } from "@/components/settings/invitations-table";
 
-const TABS = [
-  { id: "organization", label: "Organization" },
-  { id: "members", label: "Members" },
-  { id: "invitations", label: "Invitations" },
-] as const;
+type TabId = "profile" | "organization" | "members" | "invitations";
 
-type TabId = (typeof TABS)[number]["id"];
+const ALL_TABS = [
+  { id: "profile" as const, label: "Profile", ownerOnly: false },
+  { id: "organization" as const, label: "Organization", ownerOnly: true },
+  { id: "members" as const, label: "Members", ownerOnly: true },
+  { id: "invitations" as const, label: "Invitations", ownerOnly: true },
+];
 
 interface PageProps {
   searchParams: Promise<{ tab?: string }>;
@@ -29,25 +31,16 @@ interface PageProps {
 
 export default async function SettingsPage({ searchParams }: PageProps) {
   const { orgId, role, db, session } = await requireOrg();
-
-  if (!can(role, "settings:read")) {
-    return (
-      <div className="p-4 md:p-6 max-w-4xl mx-auto">
-        <div className="rounded-2xl border bg-card shadow-sm p-8 text-center">
-          <p className="text-base font-semibold">Not authorized</p>
-          <p className="text-sm text-muted-foreground mt-1">
-            Settings are only accessible to organization owners.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  const isOwner = can(role, "settings:read");
 
   const resolvedSearch = await searchParams;
-  const rawTab = resolvedSearch?.tab ?? "organization";
-  const activeTab: TabId = (TABS.some((t) => t.id === rawTab)
+  const rawTab = resolvedSearch?.tab ?? "profile";
+
+  const visibleTabs = ALL_TABS.filter((t) => !t.ownerOnly || isOwner);
+  const validTabIds = visibleTabs.map((t) => t.id);
+  const activeTab: TabId = (validTabIds.includes(rawTab as TabId)
     ? rawTab
-    : "organization") as TabId;
+    : "profile") as TabId;
 
   // ── Fetch data for the active tab ──────────────────────────────────────────
   let orgData: { name: string; slug: string | null } | null = null;
@@ -55,7 +48,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
   let ownerCount = 0;
   let invitationsData: InvitationRow[] = [];
 
-  if (activeTab === "organization") {
+  if (activeTab === "organization" && isOwner) {
     const [org] = await db
       .select({ name: schema.organization.name, slug: schema.organization.slug })
       .from(schema.organization)
@@ -64,7 +57,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
     orgData = org ?? null;
   }
 
-  if (activeTab === "members") {
+  if (activeTab === "members" && isOwner) {
     const rows = await db
       .select({
         id: schema.member.id,
@@ -91,7 +84,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
     ownerCount = membersData.filter((m) => m.role === "owner").length;
   }
 
-  if (activeTab === "invitations") {
+  if (activeTab === "invitations" && isOwner) {
     const rows = await db
       .select({
         id: schema.invitation.id,
@@ -125,13 +118,13 @@ export default async function SettingsPage({ searchParams }: PageProps) {
       <div className="mb-6">
         <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Manage your organization, members, and invitations.
+          Manage your profile, organization, members, and invitations.
         </p>
       </div>
 
       {/* Tab navigation */}
       <nav className="flex gap-1 border-b mb-6">
-        {TABS.map((tab) => (
+        {visibleTabs.map((tab) => (
           <Link
             key={tab.id}
             href={`/settings?tab=${tab.id}`}
@@ -148,11 +141,15 @@ export default async function SettingsPage({ searchParams }: PageProps) {
       </nav>
 
       {/* Tab content */}
-      {activeTab === "organization" && orgData && (
+      {activeTab === "profile" && (
+        <ProfileForm user={{ name: session.user.name, email: session.user.email }} />
+      )}
+
+      {activeTab === "organization" && orgData && isOwner && (
         <OrgForm org={orgData} />
       )}
 
-      {activeTab === "members" && (
+      {activeTab === "members" && isOwner && (
         <div className="space-y-6">
           <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
             <div className="px-6 py-5 border-b">
@@ -172,7 +169,7 @@ export default async function SettingsPage({ searchParams }: PageProps) {
         </div>
       )}
 
-      {activeTab === "invitations" && (
+      {activeTab === "invitations" && isOwner && (
         <div className="space-y-6">
           <InviteForm />
 

@@ -8,6 +8,7 @@ import { requireOrg } from "@/lib/db/scoped";
 import { can } from "@/lib/rbac";
 import { auth } from "@/lib/auth";
 import * as schema from "@/lib/db/schema";
+import { db as globalDb } from "@/lib/db"; // used for deleteOrganization + updateProfile (no org context after delete)
 
 // ─── Validation schemas ───────────────────────────────────────────────────────
 
@@ -226,6 +227,55 @@ export async function sendInvitation(
   revalidatePath("/settings");
   return {};
 }
+
+// ─── Delete organization ──────────────────────────────────────────────────────
+
+/**
+ * Permanently delete the active organization and all its business data.
+ * Executes in dependency order so FK constraints aren't violated.
+ * The organization row itself cascades to members + invitations.
+ */
+export async function deleteOrganization(): Promise<{ error?: string }> {
+  const { orgId, role } = await requireOrg();
+
+  if (!can(role, "settings:write")) {
+    return { error: "Only owners can delete the organization." };
+  }
+
+  // All business tables have onDelete: "cascade" on their org_id FK,
+  // so deleting the organization row cascades everything automatically.
+  await globalDb.delete(schema.organization).where(eq(schema.organization.id, orgId));
+
+  return {};
+}
+
+// ─── Profile ──────────────────────────────────────────────────────────────────
+
+const updateProfileSchema = z.object({
+  name: z
+    .string()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name is too long"),
+});
+
+export async function updateProfile(input: unknown): Promise<{ error?: string }> {
+  const { session } = await requireOrg();
+
+  const parsed = updateProfileSchema.safeParse(input);
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
+  }
+
+  await globalDb
+    .update(schema.user)
+    .set({ name: parsed.data.name, updatedAt: new Date() })
+    .where(eq(schema.user.id, session.user.id));
+
+  revalidatePath("/settings");
+  return {};
+}
+
+// ─── Invitations ──────────────────────────────────────────────────────────────
 
 export async function revokeInvitation(
   invitationId: string
