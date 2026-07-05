@@ -19,8 +19,15 @@ const CONTACT_PHONE = process.env.CONTACT_PHONE ?? "";
 const CONTACT_WHATSAPP = process.env.CONTACT_WHATSAPP ?? "";
 const ALLOW_PUBLIC_SIGNUP = process.env.ALLOW_PUBLIC_SIGNUP === "true";
 
-export default function SignUpPage() {
-  if (ALLOW_PUBLIC_SIGNUP) {
+interface PageProps {
+  searchParams: Promise<{ callbackURL?: string }>;
+}
+
+export default async function SignUpPage({ searchParams }: PageProps) {
+  const { callbackURL } = await searchParams;
+  const isInvited = callbackURL?.includes("accept-invitation") ?? false;
+
+  if (ALLOW_PUBLIC_SIGNUP || isInvited) {
     return <Suspense><SignUpForm /></Suspense>;
   }
 
