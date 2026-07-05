@@ -16,9 +16,9 @@ export default function NewOrgPage() {
       </Link>
 
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Onboard a client</h1>
+        <h1 className="text-2xl font-bold tracking-tight">Invite a client</h1>
         <p className="text-sm text-muted-foreground mt-0.5">
-          Creates an organization and sends an invitation email to the owner.
+          Sends an invitation email. The client signs up and names their own business.
         </p>
       </div>
 

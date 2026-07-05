@@ -12,9 +12,8 @@ import * as schema from "@/lib/db/schema";
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
 const createOrgSchema = z.object({
-  name: z.string().min(2).max(100),
   ownerEmail: z.string().email(),
-  ownerName: z.string().min(1).max(100),
+  ownerName: z.string().max(100).optional(),
 });
 
 // ─── Query actions (return data) ─────────────────────────────────────────────
@@ -168,24 +167,17 @@ export async function getOrgDetail(orgId: string) {
   };
 }
 
-/** List all users on the platform (platform admin only). */
-export async function listAllUsers() {
-  await requirePlatformAdmin();
-
-  return db
-    .select({
-      id: schema.user.id,
-      name: schema.user.name,
-      email: schema.user.email,
-      createdAt: schema.user.createdAt,
-    })
-    .from(schema.user)
-    .orderBy(schema.user.createdAt);
+function getAdminEmails(): string[] {
+  return (process.env.PLATFORM_ADMIN_EMAILS ?? "")
+    .split(",")
+    .map((e) => e.trim())
+    .filter(Boolean);
 }
 
-/** List all users with org membership count. */
-export async function listAllUsersWithOrgCount() {
+/** List all users on the platform (platform admin only). Excludes platform admins. */
+export async function listAllUsers() {
   await requirePlatformAdmin();
+  const adminEmails = getAdminEmails();
 
   const users = await db
     .select({
@@ -197,8 +189,28 @@ export async function listAllUsersWithOrgCount() {
     .from(schema.user)
     .orderBy(schema.user.createdAt);
 
+  return users.filter((u) => !adminEmails.includes(u.email));
+}
+
+/** List all users with org membership count. Excludes platform admins. */
+export async function listAllUsersWithOrgCount() {
+  await requirePlatformAdmin();
+  const adminEmails = getAdminEmails();
+
+  const users = await db
+    .select({
+      id: schema.user.id,
+      name: schema.user.name,
+      email: schema.user.email,
+      createdAt: schema.user.createdAt,
+    })
+    .from(schema.user)
+    .orderBy(schema.user.createdAt);
+
+  const clientUsers = users.filter((u) => !adminEmails.includes(u.email));
+
   const enriched = await Promise.all(
-    users.map(async (u) => {
+    clientUsers.map(async (u) => {
       const [row] = await db
         .select({ cnt: count() })
         .from(schema.member)
@@ -218,35 +230,33 @@ export async function listAllUsersWithOrgCount() {
  * On failure: returns { error } (caller shows the message).
  */
 export async function createOrgAndInviteOwner(
-  _prevState: { error?: string } | null,
+  _prevState: { error?: string; warning?: string } | null,
   formData: FormData
-): Promise<{ error: string }> {
+): Promise<{ error?: string; warning?: string }> {
   await requirePlatformAdmin();
 
   const parsed = createOrgSchema.safeParse({
-    name: formData.get("name"),
     ownerEmail: formData.get("ownerEmail"),
-    ownerName: formData.get("ownerName"),
+    ownerName: formData.get("ownerName") || undefined,
   });
 
   if (!parsed.success) {
-    return { error: "Invalid input — check all fields." };
+    return { error: "Please enter a valid email address." };
   }
 
-  const { name, ownerEmail } = parsed.data;
+  const { ownerEmail } = parsed.data;
 
-  const base = name
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .replace(/[^a-z0-9-]/g, "");
+  // Auto-generate a placeholder org name from the email domain.
+  // The client will rename it themselves in Settings after signing up.
+  const emailDomain = ownerEmail.split("@")[1]?.split(".")[0] ?? "business";
   const suffix = Date.now().toString(36).slice(-4);
-  const slug = `${base || "business"}-${suffix}`;
+  const placeholderName = emailDomain.charAt(0).toUpperCase() + emailDomain.slice(1);
+  const slug = `${emailDomain}-${suffix}`;
 
   const h = await headers();
 
-  // Create org via Better Auth server API (bypasses client-facing creation check)
   const orgResult = await auth.api.createOrganization({
-    body: { name: name.trim(), slug },
+    body: { name: placeholderName, slug },
     headers: h,
   });
 
@@ -256,7 +266,6 @@ export async function createOrgAndInviteOwner(
 
   const orgId = (orgResult as { id: string }).id;
 
-  // Invite the owner via Better Auth's invitation API
   const inviteResult = await auth.api.createInvitation({
     body: { organizationId: orgId, email: ownerEmail, role: "owner" },
     headers: h,
@@ -264,7 +273,7 @@ export async function createOrgAndInviteOwner(
 
   if (!inviteResult || !("id" in inviteResult)) {
     return {
-      error: `Org "${name}" created, but invite failed. Send an invite manually from the org settings.`,
+      error: "Org created but invitation failed. Send an invite manually from the org's settings.",
     };
   }
 

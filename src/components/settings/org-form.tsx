@@ -20,13 +20,6 @@ import { updateOrganization, deleteOrganization } from "@/server/settings/action
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  slug: z
-    .string()
-    .min(2, "Slug must be at least 2 characters")
-    .regex(
-      /^[a-z0-9-]+$/,
-      "Slug may only contain lowercase letters, numbers, and hyphens"
-    ),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -55,7 +48,6 @@ export function OrgForm({ org }: OrgFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: org.name,
-      slug: org.slug ?? "",
     },
   });
 
@@ -129,23 +121,6 @@ export function OrgForm({ org }: OrgFormProps) {
               )}
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="org-slug" className="text-sm font-medium">
-                URL slug <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="org-slug"
-                placeholder="e.g. al-rehman-rice-mill"
-                aria-invalid={!!errors.slug}
-                {...register("slug")}
-              />
-              {errors.slug && (
-                <p className="text-xs text-destructive">{errors.slug.message}</p>
-              )}
-              <p className="text-xs text-muted-foreground">
-                Changing the slug may break any existing links that use the current URL.
-              </p>
-            </div>
           </div>
 
           <div className="px-6 py-4 bg-muted/20 flex items-center gap-3">

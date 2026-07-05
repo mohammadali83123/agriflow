@@ -23,12 +23,17 @@ export async function sendInvitationEmail({
   invitationId: string;
 }) {
   const acceptUrl = `${APP_URL}/accept-invitation?invitationId=${invitationId}`;
-  await getResend().emails.send({
-    from: EMAIL_FROM,
-    to: toEmail,
-    subject: `You're invited to join ${orgName} on AgriFlow`,
-    html: invitationEmailHtml({ inviterName, orgName, acceptUrl }),
-  });
+  try {
+    await getResend().emails.send({
+      from: EMAIL_FROM,
+      to: toEmail,
+      subject: `You're invited to AgriFlow`,
+      html: invitationEmailHtml({ inviterName, orgName, acceptUrl }),
+    });
+  } catch (err) {
+    // Non-fatal — invitation record exists in DB; admin can resend manually.
+    console.error("[email] sendInvitationEmail failed:", err);
+  }
 }
 
 export async function sendVerificationEmail({
@@ -40,12 +45,16 @@ export async function sendVerificationEmail({
   userName: string;
   url: string;
 }) {
-  await getResend().emails.send({
-    from: EMAIL_FROM,
-    to: toEmail,
-    subject: "Verify your email — AgriFlow",
-    html: verificationEmailHtml({ userName, url }),
-  });
+  try {
+    await getResend().emails.send({
+      from: EMAIL_FROM,
+      to: toEmail,
+      subject: "Verify your email — AgriFlow",
+      html: verificationEmailHtml({ userName, url }),
+    });
+  } catch (err) {
+    console.error("[email] sendVerificationEmail failed:", err);
+  }
 }
 
 // ─── HTML templates ───────────────────────────────────────────────────────────

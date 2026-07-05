@@ -14,10 +14,6 @@ import { db as globalDb } from "@/lib/db"; // used for deleteOrganization + upda
 
 const updateOrgSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
-  slug: z
-    .string()
-    .min(2, "Slug must be at least 2 characters")
-    .regex(/^[a-z0-9-]+$/, "Slug may only contain lowercase letters, numbers, and hyphens"),
 });
 
 const changeRoleSchema = z.object({
@@ -41,22 +37,9 @@ export async function updateOrganization(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
-  // Check slug uniqueness (excluding current org)
-  if (parsed.data.slug) {
-    const [existing] = await db
-      .select({ id: schema.organization.id })
-      .from(schema.organization)
-      .where(eq(schema.organization.slug, parsed.data.slug))
-      .limit(1);
-
-    if (existing && existing.id !== orgId) {
-      return { error: "This slug is already taken. Please choose another." };
-    }
-  }
-
   await db
     .update(schema.organization)
-    .set({ name: parsed.data.name, slug: parsed.data.slug })
+    .set({ name: parsed.data.name })
     .where(eq(schema.organization.id, orgId));
 
   revalidatePath("/settings");
