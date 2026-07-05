@@ -19,7 +19,13 @@ import { Label } from "@/components/ui/label";
 export function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackURL = searchParams.get("callbackURL") ?? "/dashboard";
+  const rawCallback = searchParams.get("callbackURL");
+  const invitationId = searchParams.get("invitationId");
+  const callbackURL = rawCallback
+    ? rawCallback
+    : invitationId
+    ? `/accept-invitation?invitationId=${invitationId}`
+    : "/dashboard";
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -87,7 +93,7 @@ export function SignInForm() {
           <p className="text-sm text-muted-foreground text-center">
             Don&apos;t have an account?{" "}
             <Link
-              href="/sign-up"
+              href={`/sign-up?callbackURL=${encodeURIComponent(callbackURL)}`}
               className="font-medium text-primary hover:underline underline-offset-4"
             >
               Create one

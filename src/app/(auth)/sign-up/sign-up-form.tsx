@@ -104,7 +104,7 @@ export function SignUpForm() {
           <p className="text-sm text-muted-foreground text-center">
             Already have an account?{" "}
             <Link
-              href="/sign-in"
+              href={`/sign-in?callbackURL=${encodeURIComponent(callbackURL)}`}
               className="font-medium text-primary hover:underline underline-offset-4"
             >
               Sign in
