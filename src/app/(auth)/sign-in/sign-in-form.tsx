@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "@/lib/auth-client";
@@ -26,6 +26,14 @@ export function SignInForm() {
     : invitationId
     ? `/accept-invitation?invitationId=${invitationId}`
     : "/dashboard";
+
+  // Invited users land here from Better Auth's redirect but don't have accounts yet.
+  // Send them straight to sign-up so they don't have to figure out the "Create one" link.
+  useEffect(() => {
+    if (invitationId && !rawCallback) {
+      router.replace(`/sign-up?callbackURL=${encodeURIComponent(callbackURL)}`);
+    }
+  }, [invitationId, rawCallback, callbackURL, router]);
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
