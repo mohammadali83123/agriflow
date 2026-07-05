@@ -64,6 +64,12 @@ Open [http://localhost:3000](http://localhost:3000).
 | `BETTER_AUTH_SECRET` | Random secret for session signing (32+ chars) |
 | `BETTER_AUTH_URL` | Full URL of the app (e.g. `http://localhost:3000`) |
 | `PLATFORM_ADMIN_EMAILS` | Comma-separated emails that can access `/admin` |
+| `GMAIL_USER` | Gmail address used to send emails (e.g. `flow.agri.solutions@gmail.com`) |
+| `GMAIL_APP_PASSWORD` | Gmail App Password (16 chars, no spaces) — generate in Google Account → Security → App passwords |
+| `ALLOW_PUBLIC_SIGNUP` | Set to `"true"` to allow anyone to sign up. Default (`false`) is invite-only. |
+| `CONTACT_EMAIL` | Shown on the "Request access" page when public signup is off |
+| `CONTACT_PHONE` | Phone number shown on the "Request access" page |
+| `CONTACT_WHATSAPP` | WhatsApp number shown on the "Request access" page (digits only for the wa.me link) |
 
 ## Scripts
 
@@ -131,3 +137,17 @@ src/
 |---|---|
 | **Owner** | Full access — all modules, settings, reports, price overrides |
 | **Member** (Operator) | Inventory, orders, payments, production — no settings or reports |
+
+## Onboarding clients
+
+AgriFlow is invite-only. The public sign-up page shows a "Request access" screen by default.
+
+**To onboard a new client:**
+1. Go to `/admin` (requires `PLATFORM_ADMIN_EMAILS`)
+2. Click **Onboard client** → enter client's email (and optionally their name)
+3. An invitation email is sent from `GMAIL_USER`
+4. The client clicks the link → lands on sign-up → creates their account → accepts the invitation → arrives in their dashboard
+5. The org is created with a placeholder name ("New Business"); the client renames it in **Settings → Organization**
+
+**To accept an invitation** (client flow):
+Email link → auto-redirected to sign-up (even with public signup off) → create account → accept → dashboard.

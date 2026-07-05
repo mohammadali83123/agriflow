@@ -71,6 +71,32 @@ math are called out; confirm them before the sprint that depends on them.
 24. **Mobile-first layout is non-negotiable** from Sprint 1 onward. `docs/MOBILE.md` is the
     reference. The checklist there applies to every new page and component.
 
+### Email (resolved post-MVP)
+25. **Email is sent via Gmail SMTP (nodemailer), not a transactional email service.** Resend
+    requires a verified custom domain; since we use Vercel's subdomain (`agriflow-mu.vercel.app`),
+    there is no owned domain to verify. Gmail SMTP with an App Password works without a custom
+    domain. Config: `GMAIL_USER` + `GMAIL_APP_PASSWORD` (16-char App Password, no spaces).
+    Email send failures are non-fatal (try/catch + `console.error`) — the server action succeeds
+    even if the email bounces.
+
+26. **Sign-up is invite-only by default.** `ALLOW_PUBLIC_SIGNUP=true` is required to show the
+    sign-up form publicly. Without it, `/sign-up` shows a "Request access" page with contact
+    details. Exception: users arriving via an invitation email (callbackURL contains
+    `accept-invitation`) always see the sign-up form regardless of the flag.
+
+### Client onboarding (resolved post-MVP)
+27. **Admin creates the org + invitation in one action.** `/admin/orgs/new` takes only the
+    client's email (org name is not required — the client names their own business). A placeholder
+    org named "New Business" with a random slug is created; the client renames it in Settings.
+    The invitation is sent via `auth.api.createInvitation` (Better Auth), which triggers the
+    `sendInvitationEmail` callback.
+
+28. **Invitation acceptance flow:** Better Auth redirects unauthenticated users from
+    `/accept-invitation?invitationId=X` to `/sign-in?invitationId=X`. The sign-in form detects
+    `invitationId` (without a `callbackURL`) and immediately redirects to
+    `/sign-up?callbackURL=/accept-invitation?invitationId=X`. After account creation, the user
+    lands on the accept-invitation page and completes the flow.
+
 ### UI component constraints (resolved during Sprint 2)
 25. **shadcn/ui v4 uses `@base-ui/react`, NOT Radix UI.** Component APIs differ:
     - `DropdownMenuLabel` must be wrapped in `DropdownMenuGroup` or it crashes.
@@ -113,3 +139,9 @@ math are called out; confirm them before the sprint that depends on them.
 | Sprint 2 | Fixed mobile layout: wrapped MobileNav + main in `flex-col` column |
 | Sprint 2 | Added HTTP security headers to `next.config.ts` |
 | Sprint 2 | Added `docs/MOBILE.md`, `docs/SECURITY.md` |
+| Sprint 3–9 | All MVP sprints completed; see SPRINTS.md |
+| Post-MVP | Switched email provider from Resend to Gmail SMTP (nodemailer) — no custom domain needed |
+| Post-MVP | Added invite-only sign-up gate (`ALLOW_PUBLIC_SIGNUP` env var); invitation link bypasses gate |
+| Post-MVP | Admin onboarding: one-step form (email only) creates org + sends invitation |
+| Post-MVP | Invitation acceptance flow: sign-in detects invitationId and auto-redirects to sign-up |
+| Post-MVP | `invitation` table migration: added `created_at` column via node script (drizzle-kit times out on Neon) |

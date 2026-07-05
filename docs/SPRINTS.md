@@ -76,64 +76,88 @@ can complete the listed flow end-to-end against the real Neon DB.
 
 ---
 
-## 🔲 Sprint 3 — Products + reusable CSV import
-**Status: NEXT**
+## ✅ Sprint 3 — Products + reusable CSV import
+**Status: DONE**
 
-- [ ] `lib/db/schema/products.ts`: product, product_variant, packaging_option, daily_price, customer_price.
-- [ ] `lib/validations/products.ts`: Zod schemas for all product entities.
-- [ ] `server/products/actions.ts`: CRUD Server Actions (create/update/soft-delete), protected by `requireOrg()` + `can()`.
-- [ ] Product list page (`/products`): table with search + filter, empty state.
-- [ ] Product create/edit form: base unit, packaging options, variants, min/base price.
-- [ ] Daily price entry page + price history view (append-only, date-keyed).
-- [ ] `lib/units.ts`: `toBaseUnit(qty, packaging)`, `fromBaseUnit(qty, packaging)` — fully working.
-- [ ] **Reusable import pipeline** (`lib/import/`): upload → column-map → Zod validate → preview → commit.
-- [ ] Wire CSV import to Products as first consumer.
-- [ ] Postgres RLS on `product`, `product_variant`, `packaging_option`, `daily_price`, `customer_price`.
-- [ ] Test: create rice in kg with 50kg-bag packaging + daily price; import products via CSV.
+- [x] `lib/db/schema/products.ts`: product, product_variant, packaging_option, daily_price, customer_price.
+- [x] `lib/validations/products.ts`: Zod schemas for all product entities.
+- [x] `server/products/actions.ts`: CRUD Server Actions, protected by `requireOrg()` + `can()`.
+- [x] Product list page, create/edit form, daily price entry, price history view.
+- [x] `lib/units.ts`: `toBaseUnit()`, `fromBaseUnit()` fully working.
+- [x] Reusable import pipeline (`lib/import/`): upload → column-map → Zod validate → preview → commit.
+- [x] CSV import wired to Products as first consumer.
 
 ---
 
-## 🔲 Sprint 4 — Customers & Suppliers
-- Customer CRUD: multiple contacts, multiple delivery addresses, credit limit, notes.
-- Supplier CRUD + type. Customer profile page (derived balance/credit sections, still empty).
-- **Opening balance** entry for customers/suppliers (ARCHITECTURE §10).
-- Reuse the import pipeline for customers & suppliers (and opening balances).
+## ✅ Sprint 4 — Customers & Suppliers
+**Status: DONE**
 
-## 🔲 Sprint 5 — Inventory engine
-- `inventory_transaction` table + `server/inventory/engine.ts` (the only writer).
-- Purchase-in from supplier with `unit_cost_minor`; weighted-avg cost.
-- **Opening stock** entry (manual + CSV import).
-- Adjustments (damage/theft/sample/correction/audit). Warehouse CRUD.
-- Derived available/reserved balances; negative-stock guard with row locking.
-- Test: purchase 1000kg, adjust −20kg, balance = 980kg; cannot go negative.
+- [x] Customer CRUD: contacts, delivery addresses, credit limit, notes.
+- [x] Supplier CRUD + type. Customer/supplier profile pages.
+- [x] Opening balance entry for customers/suppliers.
+- [x] CSV import for customers & suppliers.
 
-## 🔲 Sprint 6 — Production (milling)
-- `production_batch` + `production_input` + `production_output` (DATA_MODEL).
-- Consuming inputs writes `production_out` inventory txns (valued at weighted-avg cost);
-  outputs write `production_in` txns.
-- Cost pool = input cost + optional added processing cost (labor/fuel), allocated across
-  outputs by value (default) / by weight / manual. Track waste + yield %.
-- Test: mill 1000kg paddy → 650kg rice + 120kg broken + 100kg bran + husk/polish + waste;
-  input stock drops, finished-goods stock rises, costs allocated, yield shown.
+---
 
-## 🔲 Sprint 7 — Orders, reservation & dispatch
-- Order lifecycle state machine (ARCHITECTURE §8). Price resolution + snapshot onto lines;
-  min-price + credit-limit override flags.
-- Confirm → reserve via inventory engine. Cancel → release.
-- Partial dispatch + partial delivery; dispatch records. Order activity timeline.
-- Test: confirm order (reserves stock); partial-dispatch; cancel releases remainder.
+## ✅ Sprint 5 — Inventory engine
+**Status: DONE**
 
-## 🔲 Sprint 8 — Invoices, Payments & Ledgers
-- Invoice generation from orders. **Optional tax:** org default rate + per-invoice on/off +
-  rate override; `tax_minor = round(subtotal_minor * rate)`.
-- Payments (all methods) + payment↔invoice allocation (many-to-many). Advance/available credit.
-- Customer & supplier ledgers; derived outstanding balances.
-- Test: one payment across two invoices; partial payment leaves correct outstanding; toggle tax.
+- [x] `inventory_transaction` table + `server/inventory/engine.ts` (sole writer).
+- [x] Purchase-in from supplier with `unit_cost_minor`; weighted-avg cost.
+- [x] Opening stock entry (manual + CSV import). Adjustments. Warehouse CRUD.
+- [x] Derived available/reserved balances; negative-stock guard with row locking.
 
-## 🔲 Sprint 9 — Reports & Dashboard
-- KPIs: sales today/month, outstanding, inventory value, low stock, top customers, pending
-  dispatch, estimated profit, credit exposure, production efficiency/yield.
-- Owner dashboard + operator dashboard. Global search across core entities.
+---
+
+## ✅ Sprint 6 — Production (milling)
+**Status: DONE**
+
+- [x] `production_batch` + `production_input` + `production_output`.
+- [x] Consuming inputs writes `production_out` inventory txns; outputs write `production_in` txns.
+- [x] Cost pool allocated across outputs by value / by weight / manual. Waste + yield tracking.
+
+---
+
+## ✅ Sprint 7 — Orders, reservation & dispatch
+**Status: DONE**
+
+- [x] Order lifecycle state machine (draft → confirmed → reserved → dispatched → completed).
+- [x] Price resolution + snapshot onto lines; min-price + credit-limit override flags.
+- [x] Confirm → reserve via inventory engine. Cancel → release. Partial dispatch. Order timeline.
+
+---
+
+## ✅ Sprint 8 — Invoices, Payments & Ledgers
+**Status: DONE**
+
+- [x] Invoice generation from orders. Optional GST: org default rate + per-invoice override.
+- [x] Payments (all methods) + payment↔invoice allocation (many-to-many). Advance/available credit.
+- [x] Customer & supplier ledgers; derived outstanding balances (never stored as mutable column).
+
+---
+
+## ✅ Sprint 9 — Reports & Dashboard
+**Status: DONE**
+
+- [x] KPIs: sales today/month, outstanding, inventory value, low stock, top customers, pending dispatch.
+- [x] Owner dashboard + operator dashboard. Global search across core entities. Reports page.
+
+---
+
+## ✅ Post-MVP — Email & Client Onboarding
+**Status: DONE** (2026-07-06)
+
+- [x] Gmail SMTP via nodemailer (`GMAIL_USER` + `GMAIL_APP_PASSWORD`) — no custom domain needed.
+- [x] Invitation email template (HTML) sent when admin onboards a client.
+- [x] Email verification template sent on sign-up.
+- [x] Admin onboarding form: email-only (org named "New Business" as placeholder; client renames in Settings).
+- [x] `/accept-invitation` page: shows org/inviter info; "Sign in to accept" or "Create account to accept".
+- [x] Invitation acceptance flow: sign-in auto-redirects invited users to sign-up; sign-up bypasses
+      invite-only gate when `callbackURL` contains `accept-invitation`.
+- [x] Platform admin emails hidden from user list in admin panel.
+- [x] Org slug removed from client-facing Settings form.
+
+---
 
 ## After MVP (do NOT build now)
 WhatsApp integration, notifications, customer portal, mobile app, barcode/QR, expenses,
