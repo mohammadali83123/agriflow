@@ -1,13 +1,18 @@
-import { Resend } from "resend";
+import nodemailer from "nodemailer";
 
-let _resend: Resend | null = null;
-function getResend(): Resend {
-  if (!_resend) _resend = new Resend(process.env.RESEND_API_KEY);
-  return _resend;
-}
-
-const EMAIL_FROM = process.env.EMAIL_FROM ?? "AgriFlow <onboarding@resend.dev>";
 const APP_URL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
+const GMAIL_USER = process.env.GMAIL_USER ?? "";
+const GMAIL_APP_PASSWORD = process.env.GMAIL_APP_PASSWORD ?? "";
+
+function getTransport() {
+  return nodemailer.createTransport({
+    service: "gmail",
+    auth: {
+      user: GMAIL_USER,
+      pass: GMAIL_APP_PASSWORD,
+    },
+  });
+}
 
 // ─── Send functions ───────────────────────────────────────────────────────────
 
@@ -24,14 +29,13 @@ export async function sendInvitationEmail({
 }) {
   const acceptUrl = `${APP_URL}/accept-invitation?invitationId=${invitationId}`;
   try {
-    await getResend().emails.send({
-      from: EMAIL_FROM,
+    await getTransport().sendMail({
+      from: `AgriFlow <${GMAIL_USER}>`,
       to: toEmail,
-      subject: `You're invited to AgriFlow`,
+      subject: "You're invited to AgriFlow",
       html: invitationEmailHtml({ inviterName, orgName, acceptUrl }),
     });
   } catch (err) {
-    // Non-fatal — invitation record exists in DB; admin can resend manually.
     console.error("[email] sendInvitationEmail failed:", err);
   }
 }
@@ -46,8 +50,8 @@ export async function sendVerificationEmail({
   url: string;
 }) {
   try {
-    await getResend().emails.send({
-      from: EMAIL_FROM,
+    await getTransport().sendMail({
+      from: `AgriFlow <${GMAIL_USER}>`,
       to: toEmail,
       subject: "Verify your email — AgriFlow",
       html: verificationEmailHtml({ userName, url }),
