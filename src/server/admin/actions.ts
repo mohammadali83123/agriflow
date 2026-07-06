@@ -227,7 +227,7 @@ export async function listAllUsers() {
   return users.filter((u) => !adminEmails.includes(u.email));
 }
 
-/** List all users with org membership count. Excludes platform admins. */
+/** List all users with their org memberships (name + role). Excludes platform admins. */
 export async function listAllUsersWithOrgCount() {
   await requirePlatformAdmin();
   const adminEmails = getAdminEmails();
@@ -244,17 +244,27 @@ export async function listAllUsersWithOrgCount() {
 
   const clientUsers = users.filter((u) => !adminEmails.includes(u.email));
 
-  const enriched = await Promise.all(
-    clientUsers.map(async (u) => {
-      const [row] = await db
-        .select({ cnt: count() })
-        .from(schema.member)
-        .where(eq(schema.member.userId, u.id));
-      return { ...u, orgCount: row?.cnt ?? 0 };
+  // Fetch all memberships in one query
+  const allMemberships = await db
+    .select({
+      userId: schema.member.userId,
+      orgName: schema.organization.name,
+      role: schema.member.role,
     })
-  );
+    .from(schema.member)
+    .innerJoin(schema.organization, eq(schema.member.organizationId, schema.organization.id))
+    .orderBy(schema.member.createdAt);
 
-  return enriched;
+  const membershipMap = new Map<string, { orgName: string; role: string }[]>();
+  for (const m of allMemberships) {
+    if (!membershipMap.has(m.userId)) membershipMap.set(m.userId, []);
+    membershipMap.get(m.userId)!.push({ orgName: m.orgName, role: m.role });
+  }
+
+  return clientUsers.map((u) => ({
+    ...u,
+    memberships: membershipMap.get(u.id) ?? [],
+  }));
 }
 
 // ─── Mutation actions (void — use redirect on success) ────────────────────────
