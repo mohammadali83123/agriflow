@@ -90,7 +90,7 @@ export function OrgForm({ org }: OrgFormProps) {
           <div className="px-6 py-5 border-b">
             <p className="text-base font-semibold">Organization details</p>
             <p className="text-sm text-muted-foreground mt-0.5">
-              Update your organization name and URL slug.
+              Update your organization name.
             </p>
           </div>
 

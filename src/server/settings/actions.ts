@@ -37,9 +37,16 @@ export async function updateOrganization(
     return { error: parsed.error.issues[0]?.message ?? "Invalid input" };
   }
 
+  const base = parsed.data.name
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]/g, "");
+  const suffix = Math.random().toString(36).slice(2, 6);
+  const slug = `${base || "business"}-${suffix}`;
+
   await db
     .update(schema.organization)
-    .set({ name: parsed.data.name })
+    .set({ name: parsed.data.name, slug })
     .where(eq(schema.organization.id, orgId));
 
   revalidatePath("/settings");
