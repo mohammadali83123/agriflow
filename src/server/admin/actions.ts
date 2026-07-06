@@ -1,13 +1,12 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { eq, count, sum, sql } from "drizzle-orm";
-import { auth } from "@/lib/auth";
 import { requirePlatformAdmin } from "@/lib/db/scoped";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
+import { sendGetStartedEmail } from "@/lib/email";
 
 // ─── Schemas ──────────────────────────────────────────────────────────────────
 
@@ -225,9 +224,10 @@ export async function listAllUsersWithOrgCount() {
 // ─── Mutation actions (void — use redirect on success) ────────────────────────
 
 /**
- * Create a new org for a client and invite their owner email.
+ * Send a platform invitation email to a new client.
+ * No org is created — the client signs up and creates their own business.
  * On success: redirects to /admin/organizations.
- * On failure: returns { error } (caller shows the message).
+ * On failure: returns { error }.
  */
 export async function createOrgAndInviteOwner(
   _prevState: { error?: string; warning?: string } | null,
@@ -244,36 +244,20 @@ export async function createOrgAndInviteOwner(
     return { error: "Please enter a valid email address." };
   }
 
-  const { ownerEmail } = parsed.data;
+  const { ownerEmail, ownerName } = parsed.data;
 
-  // Placeholder org — the client renames it in Settings after signing up.
-  const suffix = Date.now().toString(36).slice(-4);
-  const placeholderName = "New Business";
-  const slug = `new-business-${suffix}`;
+  // 7-day expiry
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+  const token = crypto.randomUUID();
 
-  const h = await headers();
-
-  const orgResult = await auth.api.createOrganization({
-    body: { name: placeholderName, slug },
-    headers: h,
+  await db.insert(schema.platformInvitation).values({
+    id: token,
+    email: ownerEmail,
+    name: ownerName ?? null,
+    expiresAt,
   });
 
-  if (!orgResult || !("id" in orgResult)) {
-    return { error: "Could not create organization. Try again." };
-  }
-
-  const orgId = (orgResult as { id: string }).id;
-
-  const inviteResult = await auth.api.createInvitation({
-    body: { organizationId: orgId, email: ownerEmail, role: "owner" },
-    headers: h,
-  });
-
-  if (!inviteResult || !("id" in inviteResult)) {
-    return {
-      error: "Org created but invitation failed. Send an invite manually from the org's settings.",
-    };
-  }
+  await sendGetStartedEmail({ toEmail: ownerEmail, name: ownerName ?? null, token });
 
   redirect("/admin/organizations");
 }

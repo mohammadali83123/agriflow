@@ -96,11 +96,11 @@ export default async function AcceptInvitationPage({ searchParams }: PageProps) 
           <AcceptInvitationButtons invitationId={invitationId} orgName={row.orgName} />
         ) : (
           <>
-            <Link href={signInUrl} className="w-full">
-              <Button className="w-full">Sign in to accept</Button>
-            </Link>
             <Link href={signUpUrl} className="w-full">
-              <Button variant="outline" className="w-full">Create account to accept</Button>
+              <Button className="w-full">Create account</Button>
+            </Link>
+            <Link href={signInUrl} className="w-full">
+              <Button variant="outline" className="w-full">Sign in to existing account</Button>
             </Link>
           </>
         )}

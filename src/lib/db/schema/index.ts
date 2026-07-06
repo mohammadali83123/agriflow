@@ -7,3 +7,4 @@ export * from "./inventory";
 export * from "./orders";
 export * from "./production";
 export * from "./invoices";
+export * from "./platform";

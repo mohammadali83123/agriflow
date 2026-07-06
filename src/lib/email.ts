@@ -61,6 +61,29 @@ export async function sendVerificationEmail({
   }
 }
 
+export async function sendGetStartedEmail({
+  toEmail,
+  name,
+  token,
+}: {
+  toEmail: string;
+  name: string | null;
+  token: string;
+}) {
+  const getStartedUrl = `${APP_URL}/get-started?token=${token}`;
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  try {
+    await getTransport().sendMail({
+      from: `AgriFlow <${GMAIL_USER}>`,
+      to: toEmail,
+      subject: "Your AgriFlow account is ready",
+      html: getStartedEmailHtml({ greeting, getStartedUrl }),
+    });
+  } catch (err) {
+    console.error("[email] sendGetStartedEmail failed:", err);
+  }
+}
+
 // ─── HTML templates ───────────────────────────────────────────────────────────
 
 function emailWrapper(content: string) {
@@ -126,6 +149,33 @@ function invitationEmailHtml({
     <p style="margin:24px 0 0;font-size:13px;color:#9ca3af;line-height:1.5;">
       This invitation expires in 48 hours. If the button above doesn&apos;t work, copy this link:<br/>
       <a href="${acceptUrl}" style="color:#16a34a;word-break:break-all;">${acceptUrl}</a>
+    </p>
+  `);
+}
+
+function getStartedEmailHtml({
+  greeting,
+  getStartedUrl,
+}: {
+  greeting: string;
+  getStartedUrl: string;
+}) {
+  return emailWrapper(`
+    <p style="margin:0 0 8px;font-size:22px;font-weight:700;color:#111827;letter-spacing:-0.02em;">
+      Welcome to AgriFlow
+    </p>
+    <p style="margin:0 0 24px;font-size:15px;color:#6b7280;line-height:1.6;">
+      ${greeting} your AgriFlow account is ready. Click below to create your account
+      and set up your business — it takes less than 2 minutes.
+    </p>
+    <a href="${getStartedUrl}"
+       style="display:inline-block;background:#16a34a;color:#ffffff;text-decoration:none;
+              padding:12px 24px;border-radius:8px;font-size:14px;font-weight:600;">
+      Create your account
+    </a>
+    <p style="margin:24px 0 0;font-size:13px;color:#9ca3af;line-height:1.5;">
+      This link expires in 7 days. If the button above doesn&apos;t work, copy this link:<br/>
+      <a href="${getStartedUrl}" style="color:#16a34a;word-break:break-all;">${getStartedUrl}</a>
     </p>
   `);
 }

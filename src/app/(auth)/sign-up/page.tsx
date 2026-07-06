@@ -25,7 +25,8 @@ interface PageProps {
 
 export default async function SignUpPage({ searchParams }: PageProps) {
   const { callbackURL } = await searchParams;
-  const isInvited = callbackURL?.includes("accept-invitation") ?? false;
+  const isInvited =
+    (callbackURL?.includes("accept-invitation") || callbackURL?.includes("token=")) ?? false;
 
   if (ALLOW_PUBLIC_SIGNUP || isInvited) {
     return <Suspense><SignUpForm /></Suspense>;
