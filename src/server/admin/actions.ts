@@ -2,7 +2,7 @@
 
 import { redirect } from "next/navigation";
 import { z } from "zod";
-import { eq, count, sum, sql } from "drizzle-orm";
+import { eq, count, sum, sql, isNull, desc } from "drizzle-orm";
 import { requirePlatformAdmin } from "@/lib/db/scoped";
 import { db } from "@/lib/db";
 import * as schema from "@/lib/db/schema";
@@ -84,6 +84,42 @@ export async function listAllOrgsWithStats() {
   );
 
   return enriched;
+}
+
+/**
+ * List all platform invitations that haven't been fully accepted yet,
+ * with status derived from whether the user account and/or org exist.
+ * Status values:
+ *   "invited"         — email sent, no account created yet
+ *   "account_created" — account exists, org not yet set up
+ *   "expired"         — link expired before they acted
+ */
+export async function listPendingInvitations() {
+  await requirePlatformAdmin();
+
+  const rows = await db
+    .select({
+      id: schema.platformInvitation.id,
+      email: schema.platformInvitation.email,
+      name: schema.platformInvitation.name,
+      createdAt: schema.platformInvitation.createdAt,
+      expiresAt: schema.platformInvitation.expiresAt,
+      userId: schema.user.id,
+    })
+    .from(schema.platformInvitation)
+    .leftJoin(schema.user, eq(schema.platformInvitation.email, schema.user.email))
+    .where(isNull(schema.platformInvitation.acceptedAt))
+    .orderBy(desc(schema.platformInvitation.createdAt));
+
+  const now = new Date();
+  return rows.map((r) => ({
+    ...r,
+    status: (r.expiresAt < now
+      ? "expired"
+      : r.userId
+      ? "account_created"
+      : "invited") as "invited" | "account_created" | "expired",
+  }));
 }
 
 /** Get a single org's detail: info, members, and usage stats. */
