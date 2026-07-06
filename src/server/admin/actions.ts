@@ -307,10 +307,29 @@ export async function deleteOrganization(orgId: string): Promise<{ error?: strin
   return {};
 }
 
-/** Hard-delete a platform user and all their sessions/memberships. */
+/** Hard-delete a platform user. Orgs where they are the only member are also deleted (cascades all business data). Shared orgs are preserved — the user is simply removed from them. */
 export async function deleteUser(userId: string): Promise<{ error?: string }> {
   await requirePlatformAdmin();
   if (!userId) return { error: "Missing user ID." };
+
+  // Find every org this user belongs to.
+  const memberships = await db
+    .select({ orgId: schema.member.organizationId })
+    .from(schema.member)
+    .where(eq(schema.member.userId, userId));
+
+  // Delete orgs where this user is the only member so they don't become orphans.
+  // Orgs with other members are left intact; the member row cascades away with the user.
+  for (const { orgId } of memberships) {
+    const [row] = await db
+      .select({ cnt: count() })
+      .from(schema.member)
+      .where(eq(schema.member.organizationId, orgId));
+
+    if ((row?.cnt ?? 0) <= 1) {
+      await db.delete(schema.organization).where(eq(schema.organization.id, orgId));
+    }
+  }
 
   await db.delete(schema.user).where(eq(schema.user.id, userId));
   return {};
