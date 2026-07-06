@@ -227,8 +227,13 @@ export async function listAllUsers() {
   return users.filter((u) => !adminEmails.includes(u.email));
 }
 
-/** List all users with their org memberships (name + role). Excludes platform admins. */
-export async function listAllUsersWithOrgCount() {
+/** Return users grouped by owner for the admin users page. Excludes platform admins.
+ *
+ * Each group represents one owner-user and contains all orgs they own,
+ * with the non-owner members of each org nested inside. This way a person
+ * who owns multiple businesses appears exactly once.
+ */
+export async function listAllUsersGroupedByOrg() {
   await requirePlatformAdmin();
   const adminEmails = getAdminEmails();
 
@@ -243,11 +248,12 @@ export async function listAllUsersWithOrgCount() {
     .orderBy(schema.user.createdAt);
 
   const clientUsers = users.filter((u) => !adminEmails.includes(u.email));
+  const userById = new Map(clientUsers.map((u) => [u.id, u]));
 
-  // Fetch all memberships in one query
   const allMemberships = await db
     .select({
       userId: schema.member.userId,
+      orgId: schema.member.organizationId,
       orgName: schema.organization.name,
       role: schema.member.role,
     })
@@ -255,16 +261,63 @@ export async function listAllUsersWithOrgCount() {
     .innerJoin(schema.organization, eq(schema.member.organizationId, schema.organization.id))
     .orderBy(schema.member.createdAt);
 
-  const membershipMap = new Map<string, { orgName: string; role: string }[]>();
+  type UserRow = { id: string; name: string; email: string; createdAt: Date };
+  type OrgEntry = { orgId: string; orgName: string; nonOwnerMembers: (UserRow & { role: string })[] };
+  type OwnerGroup = { owner: UserRow; orgs: OrgEntry[] };
+
+  // Pass 1: build owner groups and an orgId→OrgEntry map
+  const ownerMap = new Map<string, OwnerGroup>(); // ownerId → group
+  const orgEntryMap = new Map<string, OrgEntry>(); // orgId → entry (within some owner group)
+
   for (const m of allMemberships) {
-    if (!membershipMap.has(m.userId)) membershipMap.set(m.userId, []);
-    membershipMap.get(m.userId)!.push({ orgName: m.orgName, role: m.role });
+    if (m.role !== "owner") continue;
+    const user = userById.get(m.userId);
+    if (!user) continue; // admin or unknown — skip
+
+    if (!ownerMap.has(m.userId)) {
+      ownerMap.set(m.userId, { owner: user, orgs: [] });
+    }
+    const orgEntry: OrgEntry = { orgId: m.orgId, orgName: m.orgName, nonOwnerMembers: [] };
+    ownerMap.get(m.userId)!.orgs.push(orgEntry);
+    orgEntryMap.set(m.orgId, orgEntry);
   }
 
-  return clientUsers.map((u) => ({
-    ...u,
-    memberships: membershipMap.get(u.id) ?? [],
-  }));
+  // Pass 2: attach non-owner members to their org entry
+  const seenUserIds = new Set<string>(ownerMap.keys());
+  for (const m of allMemberships) {
+    if (m.role === "owner") continue;
+    const user = userById.get(m.userId);
+    if (!user) continue;
+    const orgEntry = orgEntryMap.get(m.orgId);
+    if (orgEntry) {
+      orgEntry.nonOwnerMembers.push({ ...user, role: m.role });
+      seenUserIds.add(m.userId);
+    }
+    // if the org has no tracked owner (admin-owned), the member falls through to noOrg below
+  }
+
+  // Users with no org membership at all
+  const noOrg = clientUsers.filter((u) => !seenUserIds.has(u.id));
+
+  return {
+    groups: Array.from(ownerMap.values()),
+    noOrg,
+  };
+}
+
+/** @deprecated use listAllUsersGroupedByOrg */
+export async function listAllUsersWithOrgCount() {
+  const { groups, noOrg } = await listAllUsersGroupedByOrg();
+  const all = [
+    ...groups.flatMap((g) =>
+      g.orgs.flatMap((org) => [
+        { ...g.owner, role: "owner", memberships: [{ orgName: org.orgName, role: "owner" }] },
+        ...org.nonOwnerMembers.map((m) => ({ ...m, memberships: [{ orgName: org.orgName, role: m.role }] })),
+      ])
+    ),
+    ...noOrg.map((u) => ({ ...u, role: "", memberships: [] as { orgName: string; role: string }[] })),
+  ];
+  return all;
 }
 
 // ─── Mutation actions (void — use redirect on success) ────────────────────────
