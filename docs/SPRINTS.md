@@ -145,17 +145,29 @@ can complete the listed flow end-to-end against the real Neon DB.
 ---
 
 ## ✅ Post-MVP — Email & Client Onboarding
-**Status: DONE** (2026-07-06)
+**Status: DONE** (2026-07-08)
 
 - [x] Gmail SMTP via nodemailer (`GMAIL_USER` + `GMAIL_APP_PASSWORD`) — no custom domain needed.
-- [x] Invitation email template (HTML) sent when admin onboards a client.
-- [x] Email verification template sent on sign-up.
-- [x] Admin onboarding form: email-only (org named "New Business" as placeholder; client renames in Settings).
-- [x] `/accept-invitation` page: shows org/inviter info; "Sign in to accept" or "Create account to accept".
-- [x] Invitation acceptance flow: sign-in auto-redirects invited users to sign-up; sign-up bypasses
-      invite-only gate when `callbackURL` contains `accept-invitation`.
-- [x] Platform admin emails hidden from user list in admin panel.
-- [x] Org slug removed from client-facing Settings form.
+- [x] Custom `platform_invitation` table (id = token UUID, email, name, expiresAt, acceptedAt).
+      Migration applied via node script (drizzle-kit times out on Neon).
+- [x] Admin onboarding form: email + optional name → inserts `platform_invitation` row (7-day expiry)
+      → sends "Get Started" email with `/get-started?token=X` link. No org pre-created by admin.
+- [x] `/get-started?token=X` landing page: validates token (exists, not expired, not accepted);
+      "Create account" (primary) → `/sign-up?callbackURL=/onboarding?token=X`;
+      "Sign in to existing account" (outline) secondary.
+- [x] Onboarding page (`/onboarding`): client creates their own org; after org creation + setActive,
+      calls `acceptPlatformInvitation(token)` to stamp `acceptedAt` and expire the link.
+- [x] Sign-up page bypasses invite-only gate when `callbackURL` contains `accept-invitation` or `token=`.
+- [x] Sign-in page auto-redirects to sign-up when `invitationId` param is present without a `callbackURL`.
+- [x] Admin Organizations page: "Pending invitations" section with real-time status badges
+      (Invitation sent / Account created / Expired); "Active organizations" section below.
+- [x] Admin Users page: groups by owner-user (card per client); businesses nested inside each card;
+      non-owner members listed under their specific business. Single owner with multiple businesses
+      appears exactly once.
+- [x] Cascade delete: deleting a user also deletes any org where they are the sole member.
+- [x] Slug auto-regeneration: updating org name also regenerates the slug.
+- [x] Org detail page: removed "Copy invite link" button (no longer meaningful with token-based flow).
+- [x] Platform admin emails excluded from user list in admin panel.
 
 ---
 

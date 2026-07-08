@@ -85,17 +85,33 @@ math are called out; confirm them before the sprint that depends on them.
     `accept-invitation`) always see the sign-up form regardless of the flag.
 
 ### Client onboarding (resolved post-MVP)
-27. **Admin creates the org + invitation in one action.** `/admin/orgs/new` takes only the
-    client's email (org name is not required — the client names their own business). A placeholder
-    org named "New Business" with a random slug is created; the client renames it in Settings.
-    The invitation is sent via `auth.api.createInvitation` (Better Auth), which triggers the
-    `sendInvitationEmail` callback.
+27. **Admin sends a platform invitation; the client creates their own org.**
+    `/admin/orgs/new` takes the client's email and optional name. The action inserts a
+    `platform_invitation` row (id = token UUID, 7-day expiry) and emails a
+    `/get-started?token=X` link. No org is pre-created by the admin — the client names and
+    creates their own business during onboarding. After org creation the token's `acceptedAt`
+    is stamped, expiring the link. Migrations for `platform_invitation` are applied via node
+    scripts (`scripts/migrate-*.mjs`) because drizzle-kit times out against Neon.
 
-28. **Invitation acceptance flow:** Better Auth redirects unauthenticated users from
-    `/accept-invitation?invitationId=X` to `/sign-in?invitationId=X`. The sign-in form detects
-    `invitationId` (without a `callbackURL`) and immediately redirects to
-    `/sign-up?callbackURL=/accept-invitation?invitationId=X`. After account creation, the user
-    lands on the accept-invitation page and completes the flow.
+28. **Client onboarding flow (token-based):**
+    `/get-started?token=X` → validates token (exists, not expired, not accepted) → client
+    clicks "Create account" → `/sign-up?callbackURL=/onboarding?token=X` → account created →
+    `/onboarding?token=X` → client names their business → org created → token stamped accepted
+    → `/dashboard`. Sign-up bypasses the invite-only gate when `callbackURL` contains `token=`
+    or `accept-invitation`. The old Better Auth `createInvitation` path is no longer used for
+    platform-level onboarding (only for org-member invitations within a business).
+
+29. **Admin panel invitation funnel:** `listPendingInvitations()` LEFT JOINs `platform_invitation`
+    with `user` on email. Status is derived at query time: `expired` if `expiresAt < now`,
+    `account_created` if a user row exists, otherwise `invited`. Accepted invitations
+    (`acceptedAt IS NOT NULL`) are excluded — they appear as active orgs instead.
+
+30. **Cascade delete:** deleting a platform user (admin panel) also hard-deletes any org where
+    that user is the sole member, preventing orphan orgs. Orgs with other members are preserved
+    and the user's member row is removed via FK cascade.
+
+31. **Slug auto-regeneration:** every time the org name is saved in Settings, a new slug is
+    derived from the name with a fresh 4-char random suffix. Stale slugs are therefore impossible.
 
 ### UI component constraints (resolved during Sprint 2)
 25. **shadcn/ui v4 uses `@base-ui/react`, NOT Radix UI.** Component APIs differ:
@@ -142,6 +158,10 @@ math are called out; confirm them before the sprint that depends on them.
 | Sprint 3–9 | All MVP sprints completed; see SPRINTS.md |
 | Post-MVP | Switched email provider from Resend to Gmail SMTP (nodemailer) — no custom domain needed |
 | Post-MVP | Added invite-only sign-up gate (`ALLOW_PUBLIC_SIGNUP` env var); invitation link bypasses gate |
-| Post-MVP | Admin onboarding: one-step form (email only) creates org + sends invitation |
-| Post-MVP | Invitation acceptance flow: sign-in detects invitationId and auto-redirects to sign-up |
+| Post-MVP | Switched to platform_invitation table (token-based); admin no longer pre-creates org |
+| Post-MVP | Client creates own org during onboarding; token stamped accepted after org creation |
+| Post-MVP | Admin Users page: card-per-owner layout; multi-business owners appear once |
+| Post-MVP | Cascade delete: sole-member orgs deleted when user is deleted |
+| Post-MVP | Slug auto-regenerated on every org name save |
+| Post-MVP | Org detail page: removed "Copy invite link" (not meaningful with token flow) |
 | Post-MVP | `invitation` table migration: added `created_at` column via node script (drizzle-kit times out on Neon) |

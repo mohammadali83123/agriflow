@@ -143,11 +143,18 @@ src/
 AgriFlow is invite-only. The public sign-up page shows a "Request access" screen by default.
 
 **To onboard a new client:**
-1. Go to `/admin` (requires `PLATFORM_ADMIN_EMAILS`)
-2. Click **Onboard client** → enter client's email (and optionally their name)
-3. An invitation email is sent from `GMAIL_USER`
-4. The client clicks the link → lands on sign-up → creates their account → accepts the invitation → arrives in their dashboard
-5. The org is created with a placeholder name ("New Business"); the client renames it in **Settings → Organization**
+1. Go to `/admin` → Organizations (requires `PLATFORM_ADMIN_EMAILS`)
+2. Click **Onboard client** → enter client's email and optional name
+3. A "Get Started" email is sent; the admin panel shows the invitation as **Invitation sent**
+4. Client clicks the link → `/get-started?token=X` landing page
+5. Client clicks **Create account** → sign-up (bypasses invite-only gate automatically)
+6. After sign-up, client is redirected to onboarding → names and creates their own business
+7. Token is marked accepted; client arrives in their dashboard; admin panel shows them as an active org
+
+**Admin invitation funnel statuses:**
+- **Invitation sent** — email sent, client hasn't created an account yet
+- **Account created** — account exists, business not yet set up
+- **Expired** — link expired (7 days) before client acted
 
 **To accept an invitation** (client flow):
-Email link → auto-redirected to sign-up (even with public signup off) → create account → accept → dashboard.
+Email link → `/get-started` → Create account → onboarding → dashboard.
